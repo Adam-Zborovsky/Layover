@@ -1,0 +1,11 @@
+node_modules
+dist
+*.db
+*.db-journal
+data
+uploads
+.env
+.git
+.gitignore
+*.md
+apps/mobile

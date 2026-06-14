@@ -1,0 +1,36 @@
+services:
+  recipts-server:
+    build: .
+    container_name: recipts-server
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: "file:/app/data/recipts.db"
+      UPLOAD_DIR: /app/data/uploads
+      DATA_DIR: /app/data
+    volumes:
+      - recipts_data:/app/data
+    networks:
+      - recipts-net
+
+  recipts-frontend:
+    image: nginx:alpine
+    container_name: recipts-frontend
+    restart: unless-stopped
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - recipts-server
+    networks:
+      - recipts-net
+      - adam-cloud
+
+networks:
+  recipts-net:
+    driver: bridge
+  adam-cloud:
+    external: true
+
+volumes:
+  recipts_data:

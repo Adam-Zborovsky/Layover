@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+*.db
+*.db-journal
+uploads/
+data/
+.expo/
+android/
+ios/
+*.apk
+*.aab

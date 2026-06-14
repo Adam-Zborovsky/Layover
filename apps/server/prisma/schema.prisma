@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Receipt {
+  id              String   @id @default(uuid())
+  createdAt       DateTime @default(now())
+  capturedAt      DateTime @default(now())
+  imagePath       String
+  thumbnailPath   String
+  merchant        String   @default("")
+  locationCity    String   @default("")
+  locationAddress String   @default("")
+  purchaseDate    String   @default("")
+  currency        String   @default("USD")
+  subtotal        Float    @default(0)
+  tax             Float    @default(0)
+  tip             Float    @default(0)
+  total           Float    @default(0)
+  category        String   @default("Other")
+  paymentMethod   String   @default("")
+  notes           String   @default("")
+  aiRaw           String   @default("{}")
+  aiConfidence    Float    @default(0)
+  aiModel         String   @default("")
+  status          String   @default("PROCESSING")
+  userEdited      Boolean  @default(false)
+  fileName        String   @default("")
+
+  tripId   String?
+  trip     Trip?     @relation(fields: [tripId], references: [id])
+  lineItems LineItem[]
+}
+
+model Trip {
+  id        String    @id @default(uuid())
+  name      String
+  startDate String
+  endDate   String
+  notes     String    @default("")
+  createdAt DateTime  @default(now())
+  receipts  Receipt[]
+}
+
+model LineItem {
+  id          String  @id @default(uuid())
+  description String
+  amount      Float
+  receiptId   String
+  receipt     Receipt @relation(fields: [receiptId], references: [id], onDelete: Cascade)
+}
+
+model Setting {
+  key   String @id
+  value String @default("")
+}
+
+model ExportLog {
+  id        String   @id @default(uuid())
+  format    String
+  receiptIds String
+  filePath  String
+  createdAt DateTime @default(now())
+}
