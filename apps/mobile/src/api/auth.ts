@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const BASE_URL_KEY = "api_base_url";
 const AUTH_TOKEN_KEY = "auth_token";
 
-const DEFAULT_BASE_URL = "http://10.0.2.2:3001"; // Android emulator -> host
+const DEFAULT_BASE_URL = "https://layover.adamzborovsky.com/api";
 
 let cachedBaseUrl: string | null = null;
 let cachedToken: string | null = null;
