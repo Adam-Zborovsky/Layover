@@ -6,6 +6,7 @@
     "apps/*"
   ],
   "scripts": {
+    "postinstall": "npm run build -w packages/shared",
     "dev:server": "npm run dev -w apps/server",
     "dev:mobile": "npm run start -w apps/mobile",
     "build:shared": "npm run build -w packages/shared",
@@ -14,5 +15,11 @@
     "db:generate": "npm run db:generate -w apps/server",
     "lint": "tsc --noEmit",
     "typecheck": "tsc --noEmit"
+  },
+  "version": "1.0.0",
+  "dependencies": {
+    "expo": "~56.0.0-preview.8",
+    "react": "19.2.3",
+    "react-native": "0.85.3"
   }
 }

@@ -45,6 +45,8 @@ export interface Receipt {
   status: ReceiptStatus;
   userEdited: boolean;
   fileName: string;
+  lineItems?: LineItem[];
+  trip?: Trip | null;
 }
 
 export interface Trip {

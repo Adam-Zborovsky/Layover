@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>Layover - Capture Receipt</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&amp;family=Space+Grotesk:wght@300..700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#C25A3C", // Terracotta
+                        secondary: "#4A6B53", // Deep Sage
+                        tertiary: "#2D7D7D", // Teal
+                        surface: "#FDF8F5", // Warm Neutral
+                        background: "#FAF5F0", // Cream
+                        onSurface: "#1A1A1A"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "ROUND_EIGHT": "0.5rem"
+                    },
+                    fontFamily: {
+                        headline: ["Space Grotesk", "sans-serif"],
+                        display: ["Space Grotesk", "sans-serif"],
+                        body: ["DM Sans", "sans-serif"],
+                        label: ["DM Sans", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            font-family: 'DM Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            overflow: hidden;
+            background-color: #FAF5F0;
+        }
+        .font-headline { font-family: 'Space Grotesk', sans-serif; }
+        
+        .shutter-glow {
+            box-shadow: 0 0 20px rgba(194, 90, 60, 0.4);
+        }
+        
+        .viewfinder-guide {
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.3);
+        }
+
+        .offline-badge {
+            background: rgba(251, 191, 36, 0.95);
+            backdrop-filter: blur(4px);
+        }
+
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+
+        /* Micro-interactions */
+        .active-press:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen w-full select-none">
+<!-- Top Navigation Overlay (Shared Component logic from JSON) -->
+<!-- Applying style_component_shape: w-full top-0 left-0 absolute z-50 -->
+<!-- Applying style_bg_color: bg-transparent -->
+<header class="w-full top-0 left-0 absolute z-50 flex items-center justify-between px-4 h-16 bg-gradient-to-b from-black/60 to-transparent">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-white" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-headline text-lg font-bold text-white tracking-tight">Capture Receipt</h1>
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-white/10 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-white" data-icon="flash_on">flash_on</span>
+</button>
+</header>
+<!-- Camera Viewfinder (Top 70%) -->
+<main class="relative h-[70vh] w-full overflow-hidden bg-black">
+<!-- Live Viewfinder Placeholder -->
+<div class="absolute inset-0 w-full h-full bg-center bg-cover" style="background-image: url('https://lh3.googleusercontent.com/aida/AP1WRLss42qRdIEuiaYgWrAb34KL39CfxpLkm2kFZ-NzgQQkKrSUOtE2BdmZf5Md2jL5HnRkVfqcIwd8Dzm4J1o8H_IYOfIGV2gkIhLAWEYBItyResyf_lpXT9QeODZJlG29xjm7WDfMkj25kEYgWzb4y-G0D1IMaPitW8w82knT3bYuyGUPRpQpaHpLy4ZETQSV20y0fZlLcmbuc9zM8igF0V3x964Q3SLore2mDyhEN5XsrNNafH3efIDF3u8');"></div>
+<!-- Viewfinder Guide Frame -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<div class="w-2/3 h-3/5 rounded-3xl viewfinder-guide relative">
+<!-- Corner Indicators -->
+<div class="absolute -top-1 -left-1 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-lg"></div>
+<div class="absolute -top-1 -right-1 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
+<div class="absolute -bottom-1 -left-1 w-6 h-6 border-b-4 border-l-4 border-primary rounded-bl-lg"></div>
+<div class="absolute -bottom-1 -right-1 w-6 h-6 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
+</div>
+</div>
+<!-- Offline Indicator -->
+<div class="absolute top-20 left-1/2 -translate-x-1/2 z-40">
+<div class="offline-badge px-4 py-1.5 rounded-full flex items-center gap-2 shadow-sm border border-white/20">
+<span class="material-symbols-outlined text-[14px] text-amber-900 animate-spin" data-icon="sync" style="animation-duration: 3s;">sync</span>
+<span class="font-label text-xs font-bold text-amber-900 tracking-tight">Offline — queued (3)</span>
+</div>
+</div>
+</main>
+<!-- Control Bar (Bottom 30%) -->
+<!-- Using style_bg_color: bg-[#FAF5F0] and style_component_shape: rounded-t-xl -->
+<section class="h-[30vh] w-full bg-surface rounded-t-3xl shadow-[0_-8px_30px_rgba(0,0,0,0.05)] flex flex-col justify-between items-center py-8 relative z-50">
+<!-- Quick Guidance Text -->
+<div class="px-6 text-center">
+<p class="font-body text-secondary text-sm font-medium opacity-80">Align receipt within the frame</p>
+</div>
+<!-- Main Controls Cluster -->
+<div class="flex items-center justify-around w-full px-8 max-w-md">
+<!-- Gallery Import -->
+<button class="flex flex-col items-center gap-2 group active:scale-95 transition-all">
+<div class="w-12 h-12 rounded-full border-2 border-secondary/20 flex items-center justify-center text-secondary group-hover:bg-secondary/5">
+<span class="material-symbols-outlined" data-icon="photo_library">photo_library</span>
+</div>
+<span class="font-label text-[10px] font-bold text-secondary tracking-widest uppercase">Gallery</span>
+</button>
+<!-- Shutter Button -->
+<button class="relative flex items-center justify-center group active:scale-90 transition-all duration-200">
+<!-- Outer Ring -->
+<div class="absolute w-24 h-24 rounded-full border-2 border-primary/20 scale-100 group-hover:scale-110 transition-transform duration-300"></div>
+<!-- Main Button -->
+<div class="w-[72px] h-[72px] bg-primary rounded-full flex items-center justify-center shutter-glow shadow-xl border-4 border-white">
+<span class="material-symbols-outlined text-white text-3xl" data-icon="photo_camera" data-weight="fill">photo_camera</span>
+</div>
+</button>
+<!-- Settings/History (Adapting from BottomNavBar JSON: history) -->
+<button class="flex flex-col items-center gap-2 group active:scale-95 transition-all">
+<div class="w-12 h-12 rounded-full border-2 border-secondary/20 flex items-center justify-center text-secondary group-hover:bg-secondary/5">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</div>
+<span class="font-label text-[10px] font-bold text-secondary tracking-widest uppercase">Recent</span>
+</button>
+</div>
+<!-- Visual Anchor (Bottom Home Indicator Area) -->
+<div class="w-32 h-1.5 bg-black/5 rounded-full mt-4"></div>
+</section>
+<!-- Bottom Navigation (Shared Component from JSON) -->
+<!-- Note: Following "The Shell Visibility Rule", we keep it if it's a top-level destination. 
+         Capture is a top-level tool, but usually acts as a modal-like experience. 
+         However, the JSON requested a BottomNavBar, so we integrate a version of it or suppress based on the "Task-Focused" rule. 
+         Since the prompt asks for a Camera Viewfinder screen specifically with its own controls, 
+         the BottomNavBar is typically suppressed to allow focus on the shutter. 
+         I will skip the full BottomNavBar to maintain "Task-Focused" UX logic but maintain the style of the bottom container. -->
+<script>
+        // Simple haptic-like micro-interaction for the shutter
+        const shutter = document.querySelector('.shutter-glow');
+        if (shutter) {
+            shutter.addEventListener('touchstart', () => {
+                shutter.style.backgroundColor = '#A14931';
+            });
+            shutter.addEventListener('touchend', () => {
+                shutter.style.backgroundColor = '#C25A3C';
+                // Trigger flash animation
+                const flash = document.createElement('div');
+                flash.className = 'fixed inset-0 bg-white z-[100] opacity-0 transition-opacity duration-75';
+                document.body.appendChild(flash);
+                setTimeout(() => { flash.style.opacity = '1'; }, 10);
+                setTimeout(() => { flash.style.opacity = '0'; }, 100);
+                setTimeout(() => { flash.remove(); }, 200);
+            });
+        }
+    </script>
+</body></html>

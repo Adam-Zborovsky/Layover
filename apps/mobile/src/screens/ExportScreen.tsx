@@ -11,12 +11,16 @@ import {
 import { fetchReceipts, exportReceipts, getExportUrl } from "../api/client";
 import * as Sharing from "expo-sharing";
 import { Paths, File } from "expo-file-system";
+import { colors, typography, spacing, radii } from "../ui/theme";
 import type { ReceiptListItem, PaginatedResponse } from "@recipts/shared";
+
+type ExportFormat = "zip" | "pdf" | "csv";
 
 export function ExportScreen() {
   const [receipts, setReceipts] = useState<ReceiptListItem[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState(false);
+  const [activeFormat, setActiveFormat] = useState<ExportFormat>("zip");
 
   useEffect(() => {
     loadReceipts();
@@ -48,7 +52,7 @@ export function ExportScreen() {
     }
   }
 
-  async function doExport(format: "zip" | "pdf" | "csv") {
+  async function doExport() {
     const ids = Array.from(selected);
     if (!ids.length) {
       Alert.alert("No receipts selected", "Select at least one receipt to export.");
@@ -57,7 +61,7 @@ export function ExportScreen() {
 
     setExporting(true);
     try {
-      const result = (await exportReceipts(ids, [format])) as {
+      const result = (await exportReceipts(ids, [activeFormat])) as {
         results: { format: string; path: string }[];
       };
 
@@ -82,10 +86,17 @@ export function ExportScreen() {
     }
   }
 
+  const formats: { key: ExportFormat; label: string; desc: string }[] = [
+    { key: "zip", label: "ZIP", desc: "Images with custom names" },
+    { key: "pdf", label: "PDF", desc: "Expense report, one per page" },
+    { key: "csv", label: "CSV", desc: "Spreadsheet rows" },
+  ];
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity style={styles.selectAllButton} onPress={selectAll}>
+        <Text style={styles.title}>Export</Text>
+        <TouchableOpacity style={styles.selectAllBtn} onPress={selectAll} activeOpacity={0.7}>
           <Text style={styles.selectAllText}>
             {selected.size === receipts.length ? "Deselect All" : "Select All"} ({selected.size}/{receipts.length})
           </Text>
@@ -101,45 +112,53 @@ export function ExportScreen() {
             <TouchableOpacity
               style={[styles.item, isSel && styles.itemSelected]}
               onPress={() => toggleSelect(item.id)}
+              activeOpacity={0.7}
             >
               <View style={[styles.checkbox, isSel && styles.checkboxChecked]}>
-                {isSel && <Text style={styles.checkmark}>✓</Text>}
+                {isSel && <Text style={styles.checkmark}>&#x2713;</Text>}
               </View>
               <View style={styles.itemBody}>
                 <Text style={styles.itemMerchant}>{item.merchant || "Processing..."}</Text>
                 <Text style={styles.itemMeta}>
-                  {item.category} · {item.currency} {item.total.toFixed(2)}
+                  {item.category} \u00B7 {item.currency} {Number(item.total).toFixed(2)}
                 </Text>
               </View>
             </TouchableOpacity>
           );
         }}
+        contentContainerStyle={styles.list}
       />
 
-      <View style={styles.exportActions}>
+      <View style={styles.exportPanel}>
+        <View style={styles.formatRow}>
+          {formats.map((f) => {
+            const active = activeFormat === f.key;
+            return (
+              <TouchableOpacity
+                key={f.key}
+                style={[styles.formatCard, active && styles.formatCardActive]}
+                onPress={() => setActiveFormat(f.key)}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.formatLabel, active && styles.formatLabelActive]}>
+                  {f.label}
+                </Text>
+                <Text style={styles.formatDesc}>{f.desc}</Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+
         {exporting ? (
-          <ActivityIndicator size="large" color="#111827" />
+          <ActivityIndicator size="large" color={colors.primary} style={{ padding: spacing.lg }} />
         ) : (
-          <>
-            <TouchableOpacity
-              style={[styles.exportButton, { backgroundColor: "#10B981" }]}
-              onPress={() => doExport("zip")}
-            >
-              <Text style={styles.exportButtonText}>Export ZIP</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.exportButton, { backgroundColor: "#8B5CF6" }]}
-              onPress={() => doExport("pdf")}
-            >
-              <Text style={styles.exportButtonText}>Export PDF Report</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.exportButton, { backgroundColor: "#06B6D4" }]}
-              onPress={() => doExport("csv")}
-            >
-              <Text style={styles.exportButtonText}>Export CSV</Text>
-            </TouchableOpacity>
-          </>
+          <TouchableOpacity
+            style={styles.exportButton}
+            onPress={doExport}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.exportButtonText}>Export &amp; Share</Text>
+          </TouchableOpacity>
         )}
       </View>
     </View>
@@ -149,53 +168,64 @@ export function ExportScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.background,
   },
   header: {
-    padding: 16,
-    backgroundColor: "#FFFFFF",
+    padding: spacing.lg,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.borderLight,
   },
-  selectAllButton: {
-    paddingVertical: 8,
-    alignItems: "center",
+  title: {
+    ...typography.displaySm,
+    color: colors.textPrimary,
+    marginBottom: spacing.md,
+  },
+  selectAllBtn: {
+    alignSelf: "flex-start",
+    paddingVertical: spacing.xs,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.full,
+    backgroundColor: colors.primaryDim,
   },
   selectAllText: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#111827",
+    ...typography.labelSm,
+    color: colors.primary,
+  },
+  list: {
+    paddingVertical: spacing.sm,
+    paddingBottom: spacing.lg,
   },
   item: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 16,
-    marginHorizontal: 16,
+    padding: spacing.lg,
+    marginHorizontal: spacing.lg,
     marginVertical: 4,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 10,
+    backgroundColor: colors.surface,
+    borderRadius: radii.md,
   },
   itemSelected: {
-    backgroundColor: "#EEF2FF",
+    backgroundColor: colors.primaryDim,
     borderWidth: 1,
-    borderColor: "#6366F1",
+    borderColor: colors.primary,
   },
   checkbox: {
     width: 24,
     height: 24,
-    borderRadius: 6,
+    borderRadius: radii.sm,
     borderWidth: 2,
-    borderColor: "#D1D5DB",
+    borderColor: colors.border,
     justifyContent: "center",
     alignItems: "center",
-    marginRight: 12,
+    marginRight: spacing.md,
   },
   checkboxChecked: {
-    backgroundColor: "#6366F1",
-    borderColor: "#6366F1",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   checkmark: {
-    color: "#FFFFFF",
+    color: colors.onPrimary,
     fontSize: 14,
     fontWeight: "700",
   },
@@ -203,30 +233,67 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   itemMerchant: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#111827",
+    ...typography.headlineMd,
+    color: colors.textPrimary,
   },
   itemMeta: {
-    fontSize: 13,
-    color: "#6B7280",
+    ...typography.bodySm,
+    color: colors.textSecondary,
     marginTop: 2,
   },
-  exportActions: {
-    padding: 16,
-    gap: 10,
+  exportPanel: {
+    padding: spacing.lg,
+    backgroundColor: colors.surface,
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
-    backgroundColor: "#FFFFFF",
+    borderTopColor: colors.borderLight,
+  },
+  formatRow: {
+    flexDirection: "row",
+    gap: spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  formatCard: {
+    flex: 1,
+    padding: spacing.md,
+    borderRadius: radii.md,
+    backgroundColor: colors.borderLight,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  formatCardActive: {
+    backgroundColor: colors.primaryDim,
+    borderColor: colors.primary,
+  },
+  formatLabel: {
+    ...typography.labelMd,
+    color: colors.textSecondary,
+    fontWeight: "700",
+    marginBottom: 2,
+  },
+  formatLabelActive: {
+    color: colors.primary,
+  },
+  formatDesc: {
+    ...typography.bodySm,
+    color: colors.textTertiary,
+    textAlign: "center",
   },
   exportButton: {
-    paddingVertical: 16,
-    borderRadius: 12,
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.lg,
+    borderRadius: radii.lg,
     alignItems: "center",
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 4,
   },
   exportButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
+    ...typography.labelMd,
+    color: colors.onPrimary,
     fontWeight: "700",
+    fontSize: 16,
   },
 });

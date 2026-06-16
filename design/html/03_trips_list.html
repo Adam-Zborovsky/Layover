@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, viewport-fit=cover" name="viewport"/>
+<title>Trips - Layover</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&amp;family=Space+Grotesk:wght@300..700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#C25A3C", // Terracotta
+              secondary: "#4A6B53", // Deep Sage
+              tertiary: "#2D7D7D", // Teal
+              surface: "#FDF8F5", // Warm Neutral
+              background: "#FAF5F0", // Cream
+              onSurface: "#1A1C1A",
+            },
+            borderRadius: {
+              "DEFAULT": "0.25rem",
+              "lg": "0.5rem",
+              "xl": "0.75rem",
+              "full": "9999px",
+              "layover": "8px", // ROUND_EIGHT
+            },
+            fontFamily: {
+              headline: ["Space Grotesk", "sans-serif"],
+              display: ["Space Grotesk", "sans-serif"],
+              body: ["DM Sans", "sans-serif"],
+              label: ["DM Sans", "sans-serif"],
+            },
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        vertical-align: middle;
+      }
+      .font-headline { font-family: 'Space Grotesk', sans-serif; }
+      .font-body { font-family: 'DM Sans', sans-serif; }
+      
+      /* Hide scrollbar but keep functionality */
+      .no-scrollbar::-webkit-scrollbar { display: none; }
+      .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+      .trip-card-glow {
+        box-shadow: 0 4px 20px -4px rgba(194, 90, 60, 0.08);
+      }
+
+      /* Modal Animation */
+      #new-trip-modal {
+        transition: transform 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+      .modal-overlay {
+        transition: opacity 0.3s ease;
+      }
+      .modal-hidden {
+        transform: translateY(100%);
+      }
+      .overlay-hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-onSurface font-body min-h-screen pb-24">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#FAF5F0] dark:bg-neutral-900 shadow-sm flex justify-between items-center px-4 h-20 w-full border-none">
+<div class="flex items-center gap-3">
+<button class="text-[#C25A3C] active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-2xl">menu</span>
+</button>
+<div class="flex flex-col">
+<h1 class="font-headline text-xl font-bold tracking-tight text-[#C25A3C]">Trips</h1>
+<span class="text-xs font-medium text-secondary/70">3 active trips</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-secondary hover:opacity-80 transition-opacity">search</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/20 bg-surface">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A close-up high-quality portrait of a professional modern traveler smiling warmly. The lighting is soft natural golden hour light, creating a trustworthy and personal mood. The background is a blurred airport lounge with warm beige and terracotta tones, maintaining the Layover brand aesthetic and clean professional visual style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCPP2bW0hnttJmANbevVG1x0Y8PGXaU8XZaQ_LtXrVFyIKNYSLxJkTaNgEK5z55ExSrTvt53h-JC-GUKIYlalxhideflvwvch9dI4GymMdSrqXDv-24ZBeQcpV6Q6j3XkyVCqptWNy7Jun51TfeaZ6P-7nJuFMc_ATD-vgq6bhdKZi5mSLayuuC6bzjo20m_V-ffDiD5w0JbfJagQQuMDwCXnd_YdCvopshZpIqQzTpkdS5o-Qz5fyxBYzM16HyTyat5o4r5x0EJDM"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="pt-24 px-4 space-y-4 max-w-2xl mx-auto">
+<!-- Trip Card 1 -->
+<div class="bg-surface rounded-xl overflow-hidden trip-card-glow relative flex border-l-4 border-primary group active:scale-[0.98] transition-all duration-200">
+<div class="p-5 w-full">
+<div class="flex justify-between items-start mb-2">
+<div>
+<h2 class="font-headline text-[18px] font-bold text-onSurface leading-tight">Q4 EMEA Sales Summit</h2>
+<p class="text-sm text-secondary/80 font-medium">Oct 12 – Oct 15, 2023</p>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-headline text-2xl font-bold text-primary tracking-tight">$1,420.50</span>
+<div class="flex items-center gap-1 mt-1 bg-primary/10 px-2 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="text-[10px] font-bold text-primary uppercase tracking-wider">12 receipts</span>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-2 mt-4">
+<span class="bg-secondary/10 text-secondary text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Lodging</span>
+<span class="bg-tertiary/10 text-tertiary text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Transport</span>
+<span class="bg-primary/10 text-primary text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Food</span>
+</div>
+</div>
+</div>
+<!-- Trip Card 2 -->
+<div class="bg-surface rounded-xl overflow-hidden trip-card-glow relative flex border-l-4 border-primary group active:scale-[0.98] transition-all duration-200">
+<div class="p-5 w-full">
+<div class="flex justify-between items-start mb-2">
+<div>
+<h2 class="font-headline text-[18px] font-bold text-onSurface leading-tight">Design Week Tokyo</h2>
+<p class="text-sm text-secondary/80 font-medium">Nov 02 – Nov 08, 2023</p>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-headline text-2xl font-bold text-primary tracking-tight">$2,840.12</span>
+<div class="flex items-center gap-1 mt-1 bg-primary/10 px-2 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[14px] text-primary" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="text-[10px] font-bold text-primary uppercase tracking-wider">24 receipts</span>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-2 mt-4">
+<span class="bg-secondary/10 text-secondary text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Flights</span>
+<span class="bg-primary/10 text-primary text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Food</span>
+<span class="bg-neutral-200/50 text-neutral-500 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">+2 more</span>
+</div>
+</div>
+</div>
+<!-- Trip Card 3 (Medium Confidence Indication) -->
+<div class="bg-surface rounded-xl overflow-hidden trip-card-glow relative flex border-l-4 border-primary group active:scale-[0.98] transition-all duration-200">
+<div class="p-5 w-full">
+<div class="flex justify-between items-start mb-2">
+<div>
+<div class="flex items-center gap-2">
+<h2 class="font-headline text-[18px] font-bold text-onSurface leading-tight">Client Onboarding - NYC</h2>
+<div class="w-2 h-2 rounded-full bg-amber-500" title="Needs review"></div>
+</div>
+<p class="text-sm text-secondary/80 font-medium">Dec 01 – Dec 03, 2023</p>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-headline text-2xl font-bold text-primary tracking-tight">$455.00</span>
+<div class="flex items-center gap-1 mt-1 bg-amber-100 px-2 py-0.5 rounded-full">
+<span class="material-symbols-outlined text-[14px] text-amber-700" style="font-variation-settings: 'FILL' 1;">error</span>
+<span class="text-[10px] font-bold text-amber-700 uppercase tracking-wider">3 pending</span>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-2 mt-4">
+<span class="bg-tertiary/10 text-tertiary text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest">Transport</span>
+</div>
+</div>
+</div>
+<!-- Empty State (Hidden via Tailwind hidden class) -->
+<div class="hidden flex flex-col items-center justify-center py-20 text-center space-y-6">
+<div class="w-48 h-48 bg-primary/5 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-6xl text-primary/30">travel_explore</span>
+</div>
+<div>
+<h3 class="font-headline text-xl font-bold text-onSurface">No trips yet</h3>
+<p class="text-secondary/60 max-w-xs mt-2">Start a new trip to begin tracking your expenses automatically with AI.</p>
+</div>
+<button class="border-2 border-primary text-primary font-bold px-8 py-3 rounded-full hover:bg-primary/5 transition-colors active:scale-95">
+                Create Trip
+            </button>
+</div>
+</main>
+<!-- FAB -->
+<button class="fixed right-6 bottom-24 w-16 h-16 bg-primary text-white rounded-full shadow-2xl flex items-center justify-center active:scale-90 transition-transform z-40 group" onclick="openModal()">
+<span class="material-symbols-outlined text-3xl group-hover:rotate-90 transition-transform duration-300">add</span>
+</button>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 pb-safe bg-[#FDF8F5] dark:bg-neutral-800 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-[#4A6B53] px-3 py-1 hover:bg-[#C25A3C]/5 transition-colors active:scale-97" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label text-xs font-medium tracking-tight mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#C25A3C] bg-[#C25A3C]/10 rounded-xl px-3 py-1 active:scale-97" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">travel_explore</span>
+<span class="font-label text-xs font-medium tracking-tight mt-1">Trips</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#4A6B53] px-3 py-1 hover:bg-[#C25A3C]/5 transition-colors active:scale-97" href="#">
+<span class="material-symbols-outlined">ios_share</span>
+<span class="font-label text-xs font-medium tracking-tight mt-1">Export</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#4A6B53] px-3 py-1 hover:bg-[#C25A3C]/5 transition-colors active:scale-97" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label text-xs font-medium tracking-tight mt-1">Settings</span>
+</a>
+</nav>
+<!-- New Trip Bottom Sheet Modal -->
+<div class="fixed inset-0 bg-black/40 z-[60] overlay-hidden backdrop-blur-sm" id="modal-overlay" onclick="closeModal()"></div>
+<div class="fixed bottom-0 left-0 w-full bg-surface z-[70] rounded-t-[32px] p-8 modal-hidden shadow-[0_-10px_40px_rgba(0,0,0,0.1)]" id="new-trip-modal">
+<div class="w-12 h-1.5 bg-neutral-300 rounded-full mx-auto mb-8 cursor-grab active:cursor-grabbing" onclick="closeModal()"></div>
+<h2 class="font-headline text-2xl font-bold text-onSurface mb-6">Create New Trip</h2>
+<form class="space-y-6" onsubmit="event.preventDefault(); closeModal();">
+<div class="space-y-1">
+<label class="text-[10px] font-bold text-primary uppercase tracking-widest ml-1">Trip Name</label>
+<input class="w-full bg-transparent border-0 border-b-2 border-neutral-200 focus:border-primary focus:ring-0 text-lg font-headline transition-colors py-2 px-1 placeholder:text-neutral-300" placeholder="e.g. London Tech Week" type="text"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1">
+<label class="text-[10px] font-bold text-primary uppercase tracking-widest ml-1">Start Date</label>
+<input class="w-full bg-transparent border-0 border-b-2 border-neutral-200 focus:border-primary focus:ring-0 text-sm transition-colors py-2 px-1" type="date"/>
+</div>
+<div class="space-y-1">
+<label class="text-[10px] font-bold text-primary uppercase tracking-widest ml-1">End Date</label>
+<input class="w-full bg-transparent border-0 border-b-2 border-neutral-200 focus:border-primary focus:ring-0 text-sm transition-colors py-2 px-1" type="date"/>
+</div>
+</div>
+<div class="space-y-1">
+<label class="text-[10px] font-bold text-primary uppercase tracking-widest ml-1">Notes (Optional)</label>
+<input class="w-full bg-transparent border-0 border-b-2 border-neutral-200 focus:border-primary focus:ring-0 text-sm transition-colors py-2 px-1 placeholder:text-neutral-300" placeholder="Project code or client name..." type="text"/>
+</div>
+<button class="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 active:scale-[0.98] transition-all hover:opacity-90 mt-4" type="submit">
+                Create Trip
+            </button>
+</form>
+<div class="h-8"></div> <!-- Spacer for safe area -->
+</div>
+<script>
+        const modal = document.getElementById('new-trip-modal');
+        const overlay = document.getElementById('modal-overlay');
+
+        function openModal() {
+            modal.classList.remove('modal-hidden');
+            overlay.classList.remove('overlay-hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modal.classList.add('modal-hidden');
+            overlay.classList.add('overlay-hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        // Handle ESC key
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>
+</body></html>

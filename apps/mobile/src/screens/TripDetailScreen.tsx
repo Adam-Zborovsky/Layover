@@ -4,12 +4,11 @@ import {
   Text,
   FlatList,
   StyleSheet,
-  TouchableOpacity,
-  TextInput,
-  Alert,
 } from "react-native";
-import { fetchTrip, updateTrip } from "../api/client";
+import { fetchTrip } from "../api/client";
 import { ReceiptCard } from "../components/ReceiptCard";
+import { CategoryChip } from "../components/Badges";
+import { colors, typography, spacing, radii } from "../ui/theme";
 import type { ReceiptListItem } from "@recipts/shared";
 
 export function TripDetailScreen({ route, navigation }: { route: any; navigation: any }) {
@@ -35,7 +34,7 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
   if (loading) {
     return (
       <View style={styles.centered}>
-        <Text>Loading...</Text>
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
@@ -43,41 +42,57 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
   if (!trip) {
     return (
       <View style={styles.centered}>
-        <Text>Trip not found</Text>
+        <Text style={styles.loadingText}>Trip not found</Text>
       </View>
     );
   }
 
+  const grandTotal = trip.totals?._grandTotal || 0;
+  const currency = trip.receipts?.[0]?.currency || "USD";
+  const categories = trip.totals
+    ? Object.entries(trip.totals)
+        .filter(([k]) => !k.startsWith("_"))
+        .map(([cat, total]) => ({ category: cat, total: total as number }))
+    : [];
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{trip.name}</Text>
-        <Text style={styles.dateRange}>
-          {trip.startDate} — {trip.endDate}
-        </Text>
-        {trip.notes ? <Text style={styles.notes}>{trip.notes}</Text> : null}
-        <Text style={styles.count}>
-          {trip.receiptCount} receipt{trip.receiptCount !== 1 ? "s" : ""}
-        </Text>
-        {trip.totals?._grandTotal > 0 && (
-          <Text style={styles.grandTotal}>
-            Total: {trip.receipts[0]?.currency || "USD"}{" "}
-            {trip.totals._grandTotal.toFixed(2)}
-          </Text>
-        )}
+        <View style={styles.headerRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.tripName}>{trip.name}</Text>
+            <Text style={styles.dateRange}>
+              {trip.startDate} \u2014 {trip.endDate}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Text style={styles.statValue}>{trip.receiptCount}</Text>
+            <Text style={styles.statLabel}>Receipts</Text>
+          </View>
+          <View style={styles.statBox}>
+            <Text style={[styles.statValue, { color: colors.primary }]}>
+              {currency} {grandTotal.toFixed(2)}
+            </Text>
+            <Text style={styles.statLabel}>Total Expenses</Text>
+          </View>
+        </View>
       </View>
 
-      {/* Category totals */}
-      {trip.totals && (
-        <View style={styles.totals}>
-          {Object.entries(trip.totals)
-            .filter(([k]) => !k.startsWith("_"))
-            .map(([cat, total]) => (
-              <View key={cat} style={styles.totalRow}>
-                <Text style={styles.totalCategory}>{cat}</Text>
-                <Text style={styles.totalValue}>${(total as number).toFixed(2)}</Text>
+      {categories.length > 0 && (
+        <View style={styles.categoryBreakdown}>
+          <Text style={styles.sectionTitle}>Category Breakdown</Text>
+          <View style={styles.categoryRow}>
+            {categories.map((c) => (
+              <View key={c.category} style={styles.categoryStat}>
+                <CategoryChip category={c.category} size="sm" />
+                <Text style={styles.categoryAmount}>
+                  {currency} {(c.total as number).toFixed(2)}
+                </Text>
               </View>
             ))}
+          </View>
         </View>
       )}
 
@@ -88,7 +103,7 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
           <ReceiptCard
             id={item.id}
             merchant={item.merchant}
-            total={item.total}
+            total={Number(item.total || 0)}
             currency={item.currency}
             category={item.category}
             status={item.status}
@@ -99,6 +114,7 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
             }
           />
         )}
+        contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyText}>No receipts in this trip</Text>
@@ -112,75 +128,96 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.background,
   },
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: colors.background,
+  },
+  loadingText: {
+    ...typography.bodyMd,
+    color: colors.textSecondary,
   },
   header: {
-    padding: 20,
-    backgroundColor: "#FFFFFF",
+    padding: spacing.lg,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.borderLight,
   },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 4,
-  },
-  dateRange: {
-    fontSize: 14,
-    color: "#6B7280",
-    marginBottom: 2,
-  },
-  notes: {
-    fontSize: 14,
-    color: "#374151",
-    marginTop: 8,
-    fontStyle: "italic",
-  },
-  count: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#374151",
-    marginTop: 8,
-  },
-  grandTotal: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#10B981",
-    marginTop: 4,
-  },
-  totals: {
-    padding: 16,
-    backgroundColor: "#FFFFFF",
-    marginTop: 1,
-    borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
-  },
-  totalRow: {
+  headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 4,
+    alignItems: "flex-start",
+    marginBottom: spacing.lg,
   },
-  totalCategory: {
-    fontSize: 14,
-    color: "#374151",
+  tripName: {
+    ...typography.displaySm,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
   },
-  totalValue: {
-    fontSize: 14,
+  dateRange: {
+    ...typography.bodyMd,
+    color: colors.textSecondary,
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: spacing.md,
+  },
+  statBox: {
+    flex: 1,
+    backgroundColor: colors.borderLight,
+    borderRadius: radii.md,
+    padding: spacing.md,
+  },
+  statValue: {
+    ...typography.headlineLg,
+    color: colors.textPrimary,
+  },
+  statLabel: {
+    ...typography.labelSm,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  categoryBreakdown: {
+    padding: spacing.lg,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+  },
+  sectionTitle: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: colors.secondary,
+    textTransform: "uppercase",
+    letterSpacing: 1.5,
+    marginBottom: spacing.md,
+  },
+  categoryRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.lg,
+  },
+  categoryStat: {
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  categoryAmount: {
+    ...typography.bodySm,
+    color: colors.textPrimary,
     fontWeight: "600",
-    color: "#111827",
+  },
+  list: {
+    paddingVertical: spacing.sm,
+    paddingBottom: 80,
   },
   empty: {
-    padding: 32,
+    padding: spacing.xxl,
     alignItems: "center",
   },
   emptyText: {
-    color: "#9CA3AF",
-    fontSize: 14,
+    ...typography.bodyMd,
+    color: colors.textTertiary,
   },
 });

@@ -9,21 +9,24 @@ import { TripDetailScreen } from "../screens/TripDetailScreen";
 import { TripsScreen } from "../screens/TripsScreen";
 import { ExportScreen } from "../screens/ExportScreen";
 import { SettingsScreen } from "../screens/SettingsScreen";
+import { colors, typography } from "../ui/theme";
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
+const TAB_ICONS: Record<string, { active: string; inactive: string }> = {
+  Home: { active: "\u2302", inactive: "\u2302" },
+  Trips: { active: "\u2708", inactive: "\u2708" },
+  Export: { active: "\u21E7", inactive: "\u21E7" },
+  Settings: { active: "\u2699", inactive: "\u2699" },
+};
+
 function TabIcon({ label, focused }: { label: string; focused: boolean }) {
-  const icons: Record<string, string> = {
-    Home: "🏠",
-    Trips: "✈",
-    Export: "📦",
-    Settings: "⚙",
-  };
+  const icon = TAB_ICONS[label] || { active: "?", inactive: "?" };
   return (
     <View style={tabStyles.icon}>
-      <Text style={[tabStyles.emoji, focused && tabStyles.emojiActive]}>
-        {icons[label] || "📋"}
+      <Text style={[tabStyles.symbol, focused && tabStyles.symbolActive]}>
+        {focused ? icon.active : icon.inactive}
       </Text>
     </View>
   );
@@ -31,8 +34,8 @@ function TabIcon({ label, focused }: { label: string; focused: boolean }) {
 
 const tabStyles = StyleSheet.create({
   icon: { alignItems: "center", justifyContent: "center" },
-  emoji: { fontSize: 20, opacity: 0.5 },
-  emojiActive: { opacity: 1 },
+  symbol: { fontSize: 22, color: colors.textTertiary },
+  symbolActive: { color: colors.primary },
 });
 
 function MainTabs() {
@@ -42,57 +45,47 @@ function MainTabs() {
         tabBarIcon: ({ focused }) => (
           <TabIcon label={route.name} focused={focused} />
         ),
-        tabBarActiveTintColor: "#111827",
-        tabBarInactiveTintColor: "#9CA3AF",
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.textTertiary,
         tabBarStyle: {
-          backgroundColor: "#FFFFFF",
-          borderTopColor: "#E5E7EB",
+          backgroundColor: colors.surface,
+          borderTopColor: colors.borderLight,
           height: 60,
           paddingBottom: 8,
           paddingTop: 4,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: "600",
+          ...typography.labelSm,
         },
         headerStyle: {
-          backgroundColor: "#FFFFFF",
+          backgroundColor: colors.surface,
         },
         headerTitleStyle: {
-          fontWeight: "700",
-          color: "#111827",
+          ...typography.headlineMd,
+          color: colors.textPrimary,
         },
+        headerShadowVisible: false,
       })}
     >
       <Tab.Screen
         name="Home"
         component={HomeScreen}
-        options={({ navigation }) => ({
-          title: "Receipts",
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => navigation.navigate("CaptureModal")}
-              style={{ marginRight: 16 }}
-            >
-              <Text style={{ fontSize: 24 }}>📷</Text>
-            </TouchableOpacity>
-          ),
-        })}
+        options={{ headerShown: false }}
       />
       <Tab.Screen
         name="Trips"
         component={TripsScreen}
-        options={{ title: "Trips" }}
+        options={{ headerShown: false }}
       />
       <Tab.Screen
         name="Export"
         component={ExportScreen}
-        options={{ title: "Export" }}
+        options={{ headerShown: false }}
       />
       <Tab.Screen
         name="Settings"
         component={SettingsScreen}
-        options={{ title: "Settings" }}
+        options={{ headerShown: false }}
       />
     </Tab.Navigator>
   );
@@ -102,9 +95,13 @@ export function AppNavigator() {
   return (
     <Stack.Navigator
       screenOptions={{
-        headerStyle: { backgroundColor: "#FFFFFF" },
-        headerTitleStyle: { fontWeight: "700", color: "#111827" },
-        headerTintColor: "#111827",
+        headerStyle: { backgroundColor: colors.surface },
+        headerTitleStyle: {
+          ...typography.headlineMd,
+          color: colors.textPrimary,
+        },
+        headerTintColor: colors.primary,
+        headerShadowVisible: false,
       }}
     >
       <Stack.Screen
@@ -126,7 +123,7 @@ export function AppNavigator() {
         name="CaptureModal"
         component={CaptureScreen}
         options={{
-          title: "Scan Receipt",
+          title: "Capture Receipt",
           presentation: "modal",
           headerShown: true,
         }}

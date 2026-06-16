@@ -5,6 +5,7 @@ import * as ImagePicker from "expo-image-picker";
 import { uploadReceipt } from "../api/client";
 import { addToQueue } from "../services/offlineQueue";
 import { checkHealth } from "../api/client";
+import { colors, typography, spacing, radii } from "../ui/theme";
 
 export function CaptureScreen({ navigation }: { navigation: any }) {
   const [permission, requestPermission] = useCameraPermissions();
@@ -19,12 +20,17 @@ export function CaptureScreen({ navigation }: { navigation: any }) {
   if (!permission.granted) {
     return (
       <View style={styles.permissionContainer}>
-        <Text style={styles.permissionTitle}>Camera Access Needed</Text>
+        <Text style={styles.permissionIcon}>&#x1F4F7;</Text>
+        <Text style={styles.permissionTitle}>Camera access needed</Text>
         <Text style={styles.permissionText}>
-          Grant camera permissions to scan receipts
+          Layover needs camera permission to scan your receipts and track expenses.
         </Text>
-        <TouchableOpacity style={styles.permissionButton} onPress={requestPermission}>
-          <Text style={styles.permissionButtonText}>Grant Permission</Text>
+        <TouchableOpacity
+          style={styles.permissionButton}
+          onPress={requestPermission}
+          activeOpacity={0.8}
+        >
+          <Text style={styles.permissionButtonText}>Open Settings</Text>
         </TouchableOpacity>
       </View>
     );
@@ -47,9 +53,7 @@ export function CaptureScreen({ navigation }: { navigation: any }) {
     });
 
     if (!result.canceled && result.assets[0].base64) {
-      setCapturedImage(
-        `data:image/jpeg;base64,${result.assets[0].base64}`
-      );
+      setCapturedImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
     }
   }
 
@@ -91,16 +95,21 @@ export function CaptureScreen({ navigation }: { navigation: any }) {
       <View style={styles.previewContainer}>
         <Image source={{ uri: capturedImage }} style={styles.preview} />
         <View style={styles.previewActions}>
-          <TouchableOpacity style={styles.retakeButton} onPress={retake}>
+          <TouchableOpacity
+            style={styles.retakeButton}
+            onPress={retake}
+            activeOpacity={0.7}
+          >
             <Text style={styles.retakeButtonText}>Retake</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.submitButton, uploading && styles.submitButtonDisabled]}
             onPress={submitReceipt}
             disabled={uploading}
+            activeOpacity={0.8}
           >
             <Text style={styles.submitButtonText}>
-              {uploading ? "Uploading..." : "Submit Receipt"}
+              {uploading ? "Uploading..." : "Submit"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -112,11 +121,25 @@ export function CaptureScreen({ navigation }: { navigation: any }) {
     <View style={styles.container}>
       <CameraView ref={cameraRef} style={styles.camera} facing="back">
         <View style={styles.cameraOverlay}>
+          <View style={styles.guideFrame}>
+            <View style={styles.guideCornerTL} />
+            <View style={styles.guideCornerTR} />
+            <View style={styles.guideCornerBL} />
+            <View style={styles.guideCornerBR} />
+          </View>
           <View style={styles.captureRow}>
-            <TouchableOpacity style={styles.galleryButton} onPress={pickFromGallery}>
-              <Text style={styles.galleryButtonText}>Gallery</Text>
+            <TouchableOpacity
+              style={styles.galleryButton}
+              onPress={pickFromGallery}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.galleryButtonText}>&#x1F5BC;</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.captureButton} onPress={takePhoto}>
+            <TouchableOpacity
+              style={styles.captureButton}
+              onPress={takePhoto}
+              activeOpacity={0.7}
+            >
               <View style={styles.captureButtonInner} />
             </TouchableOpacity>
             <View style={styles.galleryButton} />
@@ -140,6 +163,60 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     paddingBottom: 40,
   },
+  guideFrame: {
+    position: "absolute",
+    top: "20%",
+    left: "10%",
+    right: "10%",
+    bottom: "30%",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
+    borderRadius: radii.lg,
+  },
+  guideCornerTL: {
+    position: "absolute",
+    top: -1,
+    left: -1,
+    width: 24,
+    height: 24,
+    borderTopWidth: 3,
+    borderLeftWidth: 3,
+    borderColor: colors.primary,
+    borderTopLeftRadius: radii.md,
+  },
+  guideCornerTR: {
+    position: "absolute",
+    top: -1,
+    right: -1,
+    width: 24,
+    height: 24,
+    borderTopWidth: 3,
+    borderRightWidth: 3,
+    borderColor: colors.primary,
+    borderTopRightRadius: radii.md,
+  },
+  guideCornerBL: {
+    position: "absolute",
+    bottom: -1,
+    left: -1,
+    width: 24,
+    height: 24,
+    borderBottomWidth: 3,
+    borderLeftWidth: 3,
+    borderColor: colors.primary,
+    borderBottomLeftRadius: radii.md,
+  },
+  guideCornerBR: {
+    position: "absolute",
+    bottom: -1,
+    right: -1,
+    width: 24,
+    height: 24,
+    borderBottomWidth: 3,
+    borderRightWidth: 3,
+    borderColor: colors.primary,
+    borderBottomRightRadius: radii.md,
+  },
   captureRow: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -148,30 +225,32 @@ const styles = StyleSheet.create({
   captureButton: {
     width: 72,
     height: 72,
-    borderRadius: 36,
+    borderRadius: radii.full,
     borderWidth: 4,
-    borderColor: "#FFFFFF",
+    borderColor: colors.onPrimary,
     justifyContent: "center",
     alignItems: "center",
   },
   captureButtonInner: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
-    backgroundColor: "#FFFFFF",
+    width: 56,
+    height: 56,
+    borderRadius: radii.full,
+    backgroundColor: colors.onPrimary,
   },
   galleryButton: {
-    width: 80,
+    width: 56,
+    height: 56,
+    borderRadius: radii.full,
+    justifyContent: "center",
     alignItems: "center",
   },
   galleryButtonText: {
-    color: "#FFFFFF",
-    fontSize: 15,
-    fontWeight: "600",
+    fontSize: 28,
+    color: colors.onPrimary,
   },
   previewContainer: {
     flex: 1,
-    backgroundColor: "#000",
+    backgroundColor: colors.textPrimary,
   },
   preview: {
     flex: 1,
@@ -179,64 +258,69 @@ const styles = StyleSheet.create({
   },
   previewActions: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    padding: 20,
+    justifyContent: "space-between",
+    padding: spacing.lg,
     paddingBottom: 40,
-    backgroundColor: "#111827",
+    gap: spacing.md,
   },
   retakeButton: {
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: "#374151",
+    flex: 1,
+    paddingVertical: spacing.md,
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.tertiary,
+    alignItems: "center",
   },
   retakeButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
-    fontWeight: "600",
+    ...typography.labelMd,
+    color: colors.tertiary,
   },
   submitButton: {
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: "#10B981",
+    flex: 2,
+    paddingVertical: spacing.md,
+    borderRadius: radii.lg,
+    backgroundColor: colors.primary,
+    alignItems: "center",
   },
   submitButtonDisabled: {
     opacity: 0.5,
   },
   submitButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
+    ...typography.labelMd,
+    color: colors.onPrimary,
     fontWeight: "600",
   },
   permissionContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 32,
-    backgroundColor: "#F9FAFB",
+    padding: spacing.xxl,
+    backgroundColor: colors.background,
+  },
+  permissionIcon: {
+    fontSize: 48,
+    marginBottom: spacing.lg,
   },
   permissionTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 8,
+    ...typography.headlineLg,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
   },
   permissionText: {
-    fontSize: 14,
-    color: "#6B7280",
+    ...typography.bodyMd,
+    color: colors.textSecondary,
     textAlign: "center",
-    marginBottom: 24,
+    marginBottom: spacing.xl,
   },
   permissionButton: {
-    paddingHorizontal: 32,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: "#111827",
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.md,
+    borderRadius: radii.lg,
+    backgroundColor: colors.primary,
   },
   permissionButtonText: {
-    color: "#FFFFFF",
-    fontSize: 16,
+    ...typography.labelMd,
+    color: colors.onPrimary,
     fontWeight: "600",
   },
 });

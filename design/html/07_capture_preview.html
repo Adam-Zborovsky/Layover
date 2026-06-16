@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Capture Preview - Layover</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&amp;family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&amp;display=swap" rel="stylesheet"/>
+<!-- Material Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#C25A3C", // Terracotta
+                        secondary: "#4A6B53", // Deep Sage
+                        tertiary: "#2D7D7D", // Teal
+                        surface: "#FDF8F5", // Warm Neutral
+                        background: "#FAF5F0", // Cream
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem", // ROUND_EIGHT (0.5rem = 8px)
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    fontFamily: {
+                        headline: ["Space Grotesk", "sans-serif"],
+                        display: ["Space Grotesk", "sans-serif"],
+                        body: ["DM Sans", "sans-serif"],
+                        label: ["DM Sans", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        
+        .receipt-gradient-overlay {
+            background: linear-gradient(to bottom, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0) 30%, rgba(0,0,0,0) 70%, rgba(0,0,0,0.4) 100%);
+        }
+
+        .spring-button:active {
+            transform: scale(0.97);
+        }
+        
+        body {
+            background-color: #FAF5F0;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="font-body text-slate-900 min-h-screen flex flex-col">
+<!-- Top Navigation Bar (Shared Component Logic) -->
+<!-- Content & Identity: Use exact labels from JSON: "Capture Receipt" vs Prompt requirement "Preview Receipt". 
+         Following Prompt override for specific screen context while maintaining JSON style keys. -->
+<header class="w-full top-0 left-0 absolute z-50 flex items-center justify-between px-4 h-16 w-full bg-transparent">
+<button aria-label="Go Back" class="flex items-center justify-center w-10 h-10 rounded-full bg-black/20 text-white backdrop-blur-md active:scale-95 transition-transform">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="font-headline text-lg font-bold text-white drop-shadow-md">Preview Receipt</h1>
+<button aria-label="Toggle Flash" class="flex items-center justify-center w-10 h-10 rounded-full bg-black/20 text-white backdrop-blur-md active:scale-95 transition-transform">
+<span class="material-symbols-outlined">flash_on</span>
+</button>
+</header>
+<!-- Content Area: Split 50/50 -->
+<main class="flex-1 flex flex-col h-screen">
+<!-- Top 50%: Captured Receipt Image -->
+<section class="h-1/2 relative w-full bg-black flex items-center justify-center overflow-hidden">
+<div class="absolute inset-0 w-full h-full">
+<img alt="Receipt Preview" class="w-full h-full object-cover opacity-90 scale-105 blur-[2px] absolute" src="https://lh3.googleusercontent.com/aida/AP1WRLss42qRdIEuiaYgWrAb34KL39CfxpLkm2kFZ-NzgQQkKrSUOtE2BdmZf5Md2jL5HnRkVfqcIwd8Dzm4J1o8H_IYOfIGV2gkIhLAWEYBItyResyf_lpXT9QeODZJlG29xjm7WDfMkj25kEYgWzb4y-G0D1IMaPitW8w82knT3bYuyGUPRpQpaHpLy4ZETQSV20y0fZlLcmbuc9zM8igF0V3x964Q3SLore2mDyhEN5XsrNNafH3efIDF3u8"/>
+<!-- Sharp focus version in the center mimicking a frame -->
+<div class="relative z-10 w-full h-full flex items-center justify-center p-6">
+<div class="w-full h-full rounded-lg shadow-2xl overflow-hidden border-2 border-white/20">
+<img alt="Receipt Detail" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida/AP1WRLss42qRdIEuiaYgWrAb34KL39CfxpLkm2kFZ-NzgQQkKrSUOtE2BdmZf5Md2jL5HnRkVfqcIwd8Dzm4J1o8H_IYOfIGV2gkIhLAWEYBItyResyf_lpXT9QeODZJlG29xjm7WDfMkj25kEYgWzb4y-G0D1IMaPitW8w82knT3bYuyGUPRpQpaHpLy4ZETQSV20y0fZlLcmbuc9zM8igF0V3x964Q3SLore2mDyhEN5XsrNNafH3efIDF3u8"/>
+</div>
+</div>
+</div>
+<div class="receipt-gradient-overlay absolute inset-0 pointer-events-none"></div>
+<!-- Page Indicator Badge -->
+<div class="absolute bottom-4 right-4 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20">
+                1 PAGE
+            </div>
+</section>
+<!-- Bottom 50%: Content Area (Warm Cream #FAF5F0) -->
+<section class="h-1/2 bg-[#FAF5F0] rounded-t-[2rem] -mt-6 relative z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.1)] flex flex-col px-6 pt-10 pb-8">
+<!-- AI Analysis Teaser (Visual Language: Confidence Indicators) -->
+<div class="mb-8 flex items-center gap-3 bg-white/60 p-4 rounded-lg border border-primary/10">
+<div class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></div>
+<div class="flex-1">
+<p class="text-xs font-bold text-secondary uppercase tracking-widest mb-0.5">AI Processing</p>
+<p class="text-sm text-slate-600">Detecting merchant and total amount...</p>
+</div>
+<span class="material-symbols-outlined text-primary/40">auto_awesome</span>
+</div>
+<!-- Action Buttons Container -->
+<div class="flex flex-col gap-4 mt-auto">
+<!-- Add Another Page: Outlined Deep Sage -->
+<button class="spring-button flex items-center justify-center gap-2 w-full py-4 px-6 border-2 border-secondary text-secondary font-bold rounded-lg transition-all duration-200 hover:bg-secondary/5">
+<span class="material-symbols-outlined">post_add</span>
+                    ADD ANOTHER PAGE
+                </button>
+<!-- Submit Button: Solid Terracotta -->
+<button class="spring-button flex items-center justify-center gap-2 w-full py-4 px-6 bg-primary text-white font-bold rounded-lg shadow-lg shadow-primary/20 transition-all duration-200 active:bg-primary/90">
+                    SUBMIT RECEIPT
+                    <span class="material-symbols-outlined">check_circle</span>
+</button>
+<!-- Retake Button: Text Teal -->
+<div class="flex justify-center pt-4">
+<button class="spring-button flex items-center gap-2 text-tertiary font-bold hover:opacity-80 transition-opacity">
+<span class="material-symbols-outlined" style="font-size: 20px;">replay</span>
+                        RETAKE PHOTO
+                    </button>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Shell (Shared Component Logic - Suppression Rule: Task-Focused) -->
+<!-- According to the "Shell Visibility & Relevance" rule, we suppress the global navigation on task-focused screens. 
+         However, the JSON provides a BottomNavBar for the ecosystem. In this specific "Capture" context, 
+         the screen is "Task-Focused" (sub-page with focused buttons), so we suppress it to prioritize the content canvas. -->
+<script>
+        // Micro-interactions and spring effect simulation
+        document.querySelectorAll('.spring-button').forEach(button => {
+            button.addEventListener('touchstart', () => {
+                button.style.transform = 'scale(0.97)';
+            });
+            button.addEventListener('touchend', () => {
+                button.style.transform = 'scale(1)';
+            });
+        });
+
+        // Simple enter animation
+        window.addEventListener('DOMContentLoaded', () => {
+            const bottomArea = document.querySelector('section:last-of-type');
+            bottomArea.style.transform = 'translateY(100px)';
+            bottomArea.style.opacity = '0';
+            
+            setTimeout(() => {
+                bottomArea.style.transition = 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)';
+                bottomArea.style.transform = 'translateY(0)';
+                bottomArea.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+</body></html>

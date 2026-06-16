@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Receipt Details - Layover</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#C25A3C",
+                        secondary: "#4A6B53",
+                        tertiary: "#2D7D7D",
+                        surface: "#FDF8F5",
+                        background: "#FAF5F0",
+                        "on-surface": "#2D2D2D",
+                        "accent-food": "#E07B3C",
+                        "accent-car": "#4A90D9",
+                        "accent-lodging": "#7B4AD9"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem", // ROUND_EIGHT
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    fontFamily: {
+                        headline: ["Space Grotesk", "sans-serif"],
+                        display: ["Space Grotesk", "sans-serif"],
+                        body: ["DM Sans", "sans-serif"],
+                        label: ["DM Sans", "sans-serif"]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .confidence-indicator {
+            border-left: 3px solid #2D7D7D;
+        }
+        .category-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .category-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        input:focus {
+            outline: none;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body class="bg-background font-body text-on-surface pb-32 selection:bg-primary/20">
+<!-- TopAppBar Component -->
+<header class="w-full top-0 sticky z-50 bg-[#FAF5F0] dark:bg-[#1A1C1E] flex items-center justify-between px-4 py-3 w-full">
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[#C25A3C]">arrow_back</span>
+</button>
+<h1 class="font-headline text-lg tracking-tight font-bold text-[#C25A3C]">Receipt Details</h1>
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[#C25A3C]">delete</span>
+</button>
+</header>
+<main class="max-w-md mx-auto px-4 pt-4 space-y-6">
+<!-- Receipt Image Preview -->
+<section class="relative group cursor-zoom-in">
+<div class="aspect-[4/5] w-full rounded-lg overflow-hidden shadow-sm">
+<img alt="Captured receipt photo" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDLG3h5uauqP8sZVtQIKjwuBeKSb4tPAj91hre5yWNjQwmjlbczmtjIWmLTJsMGKwKxZgRL2ZfKV8ir2wPlnwTcPoy8sfj09wad1yTqcbMooy7xhu9u8D-gUFBBva_hj6JPXUrX9l_9PWxGp_m5oZdWjNtUHNW53QkGvQxInIArBGDpZdmXTEaeG39ChVrrVDdGFl1I1GuJh1a7BbCJyvoFxBWjZ4dLesBRlkVif27K1io3kCp5Wtf41dRCjfL1UDIqA52Tdq2Yy6g"/>
+<div class="absolute inset-0 bg-black/5 group-hover:bg-transparent transition-colors"></div>
+</div>
+<!-- Status Badge -->
+<div class="absolute top-4 right-4 bg-tertiary/15 text-tertiary px-3 py-1 rounded-full text-xs font-bold font-label backdrop-blur-md">
+                CONFIRMED
+            </div>
+<!-- Confidence Pill -->
+<div class="absolute bottom-4 left-4 bg-white/90 px-3 py-1.5 rounded-full shadow-sm flex items-center gap-2">
+<div class="w-2 h-2 rounded-full bg-tertiary"></div>
+<span class="text-[10px] font-bold text-gray-700 tracking-wider uppercase">Gemini Flash | 98% Confidence</span>
+</div>
+</section>
+<!-- Editable Fields Card -->
+<section class="bg-surface rounded-lg p-5 shadow-[0_4px_20px_rgba(194,90,60,0.05)] space-y-6">
+<!-- Merchant -->
+<div class="confidence-indicator pl-4 space-y-1">
+<label class="text-[10px] font-bold text-primary/60 tracking-widest uppercase font-label">Merchant</label>
+<input class="w-full bg-transparent border-0 border-b border-gray-200 focus:border-primary px-0 pb-1 text-lg font-headline font-bold text-on-surface" type="text" value="THE CORNER BISTRO"/>
+</div>
+<div class="grid grid-cols-2 gap-6">
+<!-- Location -->
+<div class="confidence-indicator pl-4 space-y-1">
+<label class="text-[10px] font-bold text-primary/60 tracking-widest uppercase font-label">Location</label>
+<div class="text-sm font-medium">123 Main St, Anytown</div>
+</div>
+<!-- Date -->
+<div class="confidence-indicator pl-4 space-y-1">
+<label class="text-[10px] font-bold text-primary/60 tracking-widest uppercase font-label">Date</label>
+<div class="flex items-center justify-between group cursor-pointer">
+<span class="text-sm font-medium">Oct 26, 2024</span>
+<span class="material-symbols-outlined text-sm text-primary group-hover:scale-110 transition-transform">calendar_today</span>
+</div>
+</div>
+</div>
+<!-- Amount Section -->
+<div class="pt-4 border-t border-gray-100 space-y-4">
+<div class="flex items-center justify-between confidence-indicator pl-4">
+<span class="text-sm text-secondary font-medium">Subtotal</span>
+<span class="font-body text-base">$55.40</span>
+</div>
+<div class="flex items-center justify-between confidence-indicator pl-4">
+<div class="flex items-center gap-2">
+<span class="text-sm text-secondary font-medium">Tax</span>
+<span class="text-[10px] bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">8%</span>
+</div>
+<span class="font-body text-base">$4.43</span>
+</div>
+<div class="flex items-center justify-between px-0">
+<span class="text-sm text-secondary font-medium pl-5">Tip</span>
+<div class="flex items-center gap-1 border-b border-dashed border-primary">
+<span class="text-xs text-primary">$</span>
+<input class="w-12 text-right bg-transparent border-none p-0 text-base font-medium text-primary" type="text" value="10.00"/>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4">
+<span class="text-lg font-headline font-bold text-secondary">Total Amount</span>
+<div class="flex items-baseline gap-1">
+<span class="text-sm font-bold text-primary">USD</span>
+<span class="text-3xl font-headline font-bold text-primary tracking-tight">$69.83</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Category Picker -->
+<section class="space-y-3">
+<h3 class="text-[10px] font-bold text-secondary/60 tracking-widest uppercase font-label ml-1">Category</h3>
+<div class="category-scrollbar flex gap-2 overflow-x-auto pb-2 -mx-4 px-4">
+<button class="flex-shrink-0 px-4 py-2 bg-primary text-white rounded-full text-xs font-bold flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">restaurant</span>
+                    Food
+                </button>
+<button class="flex-shrink-0 px-4 py-2 bg-white text-gray-500 border border-gray-100 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-gray-50 transition-colors">
+<span class="material-symbols-outlined text-sm">directions_car</span>
+                    CarService
+                </button>
+<button class="flex-shrink-0 px-4 py-2 bg-white text-gray-500 border border-gray-100 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-gray-50 transition-colors">
+<span class="material-symbols-outlined text-sm">hotel</span>
+                    Lodging
+                </button>
+<button class="flex-shrink-0 px-4 py-2 bg-white text-gray-500 border border-gray-100 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-gray-50 transition-colors">
+<span class="material-symbols-outlined text-sm">flight</span>
+                    Airfare
+                </button>
+<button class="flex-shrink-0 px-4 py-2 bg-white text-gray-500 border border-gray-100 rounded-full text-xs font-bold flex items-center gap-2 hover:bg-gray-50 transition-colors">
+<span class="material-symbols-outlined text-sm">local_parking</span>
+                    Parking
+                </button>
+</div>
+</section>
+<!-- Additional Info -->
+<section class="bg-surface rounded-lg divide-y divide-gray-100 overflow-hidden shadow-sm">
+<div class="p-4 flex items-center justify-between group cursor-pointer active:bg-gray-50">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary opacity-60">credit_card</span>
+<span class="text-sm font-medium">Payment Method</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="text-xs text-gray-500">Amex •••• 1002</span>
+<span class="material-symbols-outlined text-gray-400 text-sm">chevron_right</span>
+</div>
+</div>
+<div class="p-4 flex items-center justify-between group cursor-pointer active:bg-gray-50">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary opacity-60">work</span>
+<span class="text-sm font-medium">Trip Assignment</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="text-xs text-primary font-bold">No trip</span>
+<span class="material-symbols-outlined text-gray-400 text-sm">expand_more</span>
+</div>
+</div>
+<div class="p-4 space-y-2">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary opacity-60">notes</span>
+<span class="text-sm font-medium">Notes</span>
+</div>
+<textarea class="w-full bg-transparent border-none p-0 text-sm focus:ring-0 placeholder:text-gray-300 resize-none" placeholder="Add a description or project code..." rows="2"></textarea>
+</div>
+</section>
+<!-- Line Items -->
+<details class="group bg-surface rounded-lg shadow-sm">
+<summary class="list-none p-4 flex items-center justify-between cursor-pointer">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary opacity-60">list_alt</span>
+<span class="text-sm font-medium">Line Items (3)</span>
+</div>
+<span class="material-symbols-outlined text-gray-400 group-open:rotate-180 transition-transform">expand_more</span>
+</summary>
+<div class="px-4 pb-4 space-y-3">
+<div class="flex justify-between items-start pt-2 border-t border-gray-100">
+<div class="text-xs">
+<div class="font-bold">Grilled Salmon</div>
+<div class="text-gray-400">Qty: 1</div>
+</div>
+<span class="text-xs font-medium">$28.00</span>
+</div>
+<div class="flex justify-between items-start">
+<div class="text-xs">
+<div class="font-bold">Caesar Salad</div>
+<div class="text-gray-400">Qty: 1</div>
+</div>
+<span class="text-xs font-medium">$12.00</span>
+</div>
+<div class="flex justify-between items-start">
+<div class="text-xs">
+<div class="font-bold">Chocolate Lava Cake</div>
+<div class="text-gray-400">Qty: 1</div>
+</div>
+<span class="text-xs font-medium">$10.00</span>
+</div>
+</div>
+</details>
+</main>
+<!-- BottomNavBar as Floating Action Area -->
+<div class="fixed bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background to-transparent pt-12 z-40">
+<div class="max-w-md mx-auto flex gap-3">
+<button class="flex-1 py-4 border-2 border-secondary text-secondary rounded-lg font-bold text-sm flex items-center justify-center gap-2 hover:bg-secondary/5 transition-colors active:scale-[0.98]">
+<span class="material-symbols-outlined text-sm">refresh</span>
+                Re-run AI
+            </button>
+<button class="flex-[2] py-4 bg-primary text-white rounded-lg font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 transition-opacity active:scale-[0.98]">
+                Save Changes
+            </button>
+</div>
+</div>
+<!-- Hidden standard BottomNavBar to fulfill JSON mandate (but visually prioritized focus action above) -->
+<nav class="hidden md:flex fixed bottom-0 w-full z-50 rounded-t-xl bg-[#FDF8F5] dark:bg-[#1A1C1E] shadow-[0_-4px_12px_rgba(0,0,0,0.05)] border-t border-[#F1E9E4] dark:border-[#2D2D2D] justify-around items-center px-6 py-3 w-full">
+<div class="flex flex-col items-center justify-center text-[#4A6B53] opacity-70 hover:bg-[#C25A3C]/5">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label text-xs font-medium uppercase tracking-wider">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#C25A3C] font-bold bg-[#C25A3C]/10 rounded-xl px-3 py-1">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="font-label text-xs font-medium uppercase tracking-wider">Capture</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#4A6B53] opacity-70 hover:bg-[#C25A3C]/5">
+<span class="material-symbols-outlined">flight_takeoff</span>
+<span class="font-label text-xs font-medium uppercase tracking-wider">Trips</span>
+</div>
+<div class="flex flex-col items-center justify-center text-[#4A6B53] opacity-70 hover:bg-[#C25A3C]/5">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label text-xs font-medium uppercase tracking-wider">Settings</span>
+</div>
+</nav>
+<script>
+        // Micro-interactions
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                this.classList.add('scale-95');
+                setTimeout(() => this.classList.remove('scale-95'), 150);
+            });
+        });
+
+        // Simple scroll reveal for cards
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('opacity-100', 'translate-y-0');
+                    entry.target.classList.remove('opacity-0', 'translate-y-4');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section, details').forEach(el => {
+            el.classList.add('transition-all', 'duration-500', 'ease-out', 'opacity-0', 'translate-y-4');
+            observer.observe(el);
+        });
+    </script>
+</body></html>

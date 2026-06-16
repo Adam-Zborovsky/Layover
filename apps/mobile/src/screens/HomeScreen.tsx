@@ -11,6 +11,7 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { ReceiptCard } from "../components/ReceiptCard";
 import { fetchReceipts } from "../api/client";
+import { colors, typography, spacing, radii } from "../ui/theme";
 import type { PaginatedResponse, ReceiptListItem } from "@recipts/shared";
 
 export function HomeScreen({ navigation }: { navigation: any }) {
@@ -55,39 +56,64 @@ export function HomeScreen({ navigation }: { navigation: any }) {
     { key: "PROCESSING", label: "Processing" },
   ];
 
+  const totalAmount = receipts.reduce((sum, r) => sum + Number(r.total || 0), 0);
+  const totalCurrency = receipts[0]?.currency || "USD";
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search receipts..."
-          placeholderTextColor="#9CA3AF"
-          value={search}
-          onChangeText={setSearch}
-          onSubmitEditing={load}
-          returnKeyType="search"
-        />
-        {/* Filter chips */}
+        <View style={styles.titleRow}>
+          <View>
+            <Text style={styles.appTitle}>Layover</Text>
+            <Text style={styles.subtitle}>
+              {receipts.length} receipt{receipts.length !== 1 ? "s" : ""}
+              {totalAmount > 0 && `  \u00B7  ${totalCurrency} ${totalAmount.toFixed(2)}`}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={styles.captureFab}
+            onPress={() => navigation.navigate("CaptureModal")}
+            activeOpacity={0.8}
+          >
+            <Text style={styles.captureFabIcon}>+</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.searchBar}>
+          <Text style={styles.searchIcon}>&#x1F50D;</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search receipts..."
+            placeholderTextColor={colors.textTertiary}
+            value={search}
+            onChangeText={setSearch}
+            onSubmitEditing={load}
+            returnKeyType="search"
+          />
+        </View>
         <View style={styles.filterRow}>
-          {filters.map((f) => (
-            <TouchableOpacity
-              key={f.key || "all"}
-              style={[
-                styles.filterChip,
-                activeFilter === f.key && styles.filterChipActive,
-              ]}
-              onPress={() => setActiveFilter(f.key)}
-            >
-              <Text
+          {filters.map((f) => {
+            const active = activeFilter === f.key;
+            return (
+              <TouchableOpacity
+                key={f.key || "all"}
                 style={[
-                  styles.filterChipText,
-                  activeFilter === f.key && styles.filterChipTextActive,
+                  styles.filterChip,
+                  active && styles.filterChipActive,
                 ]}
+                onPress={() => setActiveFilter(f.key)}
+                activeOpacity={0.7}
               >
-                {f.label}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={[
+                    styles.filterChipText,
+                    active && styles.filterChipTextActive,
+                  ]}
+                >
+                  {f.label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
 
@@ -98,7 +124,7 @@ export function HomeScreen({ navigation }: { navigation: any }) {
           <ReceiptCard
             id={item.id}
             merchant={item.merchant}
-            total={item.total}
+            total={Number(item.total || 0)}
             currency={item.currency}
             category={item.category}
             status={item.status}
@@ -108,14 +134,20 @@ export function HomeScreen({ navigation }: { navigation: any }) {
           />
         )}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
         }
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.empty}>
+            <Text style={styles.emptyIcon}>&#x1F4F7;</Text>
             <Text style={styles.emptyTitle}>No receipts yet</Text>
             <Text style={styles.emptySubtitle}>
-              Tap the camera button to scan your first receipt
+              Capture your first receipt to start tracking expenses
             </Text>
           </View>
         }
@@ -127,61 +159,111 @@ export function HomeScreen({ navigation }: { navigation: any }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.background,
   },
   header: {
-    padding: 16,
-    backgroundColor: "#FFFFFF",
+    padding: spacing.lg,
+    paddingBottom: spacing.md,
+    backgroundColor: colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: "#E5E7EB",
+    borderBottomColor: colors.borderLight,
+  },
+  titleRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: spacing.md,
+  },
+  appTitle: {
+    ...typography.displaySm,
+    color: colors.textPrimary,
+  },
+  subtitle: {
+    ...typography.bodySm,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  captureFab: {
+    width: 44,
+    height: 44,
+    borderRadius: radii.full,
+    backgroundColor: colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  captureFabIcon: {
+    fontSize: 24,
+    fontWeight: "400",
+    color: colors.onPrimary,
+    marginTop: -2,
+  },
+  searchBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: colors.borderLight,
+    borderRadius: radii.full,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.md,
+  },
+  searchIcon: {
+    fontSize: 14,
+    marginRight: spacing.sm,
   },
   searchInput: {
-    backgroundColor: "#F3F4F6",
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    flex: 1,
+    paddingVertical: spacing.md,
     fontSize: 15,
-    color: "#111827",
-    marginBottom: 12,
+    color: colors.textPrimary,
   },
   filterRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: spacing.sm,
   },
   filterChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 20,
-    backgroundColor: "#F3F4F6",
+    paddingHorizontal: spacing.lg,
+    paddingVertical: 7,
+    borderRadius: radii.full,
+    backgroundColor: colors.borderLight,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
   filterChipActive: {
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
   filterChipText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#6B7280",
+    ...typography.labelSm,
+    color: colors.textSecondary,
   },
   filterChipTextActive: {
-    color: "#FFFFFF",
+    color: colors.onPrimary,
   },
   list: {
-    paddingVertical: 8,
+    paddingVertical: spacing.sm,
+    paddingBottom: 80,
   },
   empty: {
     alignItems: "center",
-    paddingTop: 80,
-    paddingHorizontal: 32,
+    paddingTop: 100,
+    paddingHorizontal: spacing.xxl,
+  },
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: spacing.lg,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#374151",
-    marginBottom: 8,
+    ...typography.headlineLg,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
   },
   emptySubtitle: {
-    fontSize: 14,
-    color: "#9CA3AF",
+    ...typography.bodyMd,
+    color: colors.textTertiary,
     textAlign: "center",
   },
 });

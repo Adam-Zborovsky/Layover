@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Trip Detail — JFK→LHR June</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&amp;family=Space+Grotesk:wght@300..700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#C25A3C",
+                        secondary: "#4A6B53",
+                        tertiary: "#2D7D7D",
+                        surface: "#FDF8F5",
+                        background: "#FAF5F0",
+                        "status-high": "#2D7D7D",
+                        "status-med": "#C28D3C",
+                        "status-low": "#C25A3C"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px",
+                        "round-eight": "0.5rem"
+                    },
+                    fontFamily: {
+                        headline: ["Space Grotesk", "sans-serif"],
+                        display: ["Space Grotesk", "sans-serif"],
+                        body: ["DM Sans", "sans-serif"],
+                        label: ["DM Sans", "sans-serif"]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background-color: #FAF5F0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .font-headline { font-family: 'Space Grotesk', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom scrollbar for horizontal chips */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        .receipt-card-shadow {
+            box-shadow: 0 4px 12px -2px rgba(194, 90, 60, 0.05);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="text-neutral-900 selection:bg-primary selection:text-white">
+<!-- TopAppBar -->
+<header class="w-full sticky top-0 z-50 bg-[#FAF5F0] dark:bg-neutral-900 flex items-center justify-between px-4 h-16 w-full">
+<button class="active:scale-95 transition-transform hover:opacity-80 transition-opacity p-2">
+<span class="material-symbols-outlined text-[#C25A3C]">arrow_back</span>
+</button>
+<h1 class="font-headline text-xl font-bold tracking-tight text-[#C25A3C]">JFK→LHR June</h1>
+<button class="active:scale-95 transition-transform hover:opacity-80 transition-opacity p-2">
+<span class="material-symbols-outlined text-[#C25A3C]">edit</span>
+</button>
+</header>
+<main class="px-4 pb-32 max-w-2xl mx-auto space-y-6">
+<!-- Trip Summary Card -->
+<section class="bg-[#FDF8F5] p-6 rounded-lg shadow-sm border border-orange-50/50">
+<div class="flex justify-between items-start mb-4">
+<div>
+<p class="text-xs font-medium uppercase tracking-widest text-[#4A6B53] mb-1">Trip Duration</p>
+<p class="font-body text-sm text-neutral-600">June 12 — 15, 2026</p>
+</div>
+<div class="text-right">
+<p class="text-xs font-medium uppercase tracking-widest text-[#4A6B53] mb-1">Receipts</p>
+<p class="font-headline font-bold text-neutral-800">12 total</p>
+</div>
+</div>
+<div class="pt-4 border-t border-[#4A6B53]/10">
+<p class="text-xs font-medium uppercase tracking-widest text-[#4A6B53] mb-1">Total Expenses</p>
+<p class="text-4xl font-headline font-bold text-[#C25A3C]">$847.32</p>
+</div>
+</section>
+<!-- Category Breakdown (Horizontal Scroll) -->
+<section>
+<h2 class="text-xs font-medium uppercase tracking-widest text-[#4A6B53] px-1 mb-3">Category Breakdown</h2>
+<div class="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+<!-- Food Chip -->
+<div class="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#E07B3C]/10 border border-[#E07B3C]/20">
+<span class="material-symbols-outlined text-sm text-[#E07B3C]">restaurant</span>
+<span class="text-xs font-bold text-[#E07B3C] font-label">Food $142.50</span>
+</div>
+<!-- Car Service Chip -->
+<div class="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#4A90D9]/10 border border-[#4A90D9]/20">
+<span class="material-symbols-outlined text-sm text-[#4A90D9]">local_taxi</span>
+<span class="text-xs font-bold text-[#4A90D9] font-label">CarService $280.00</span>
+</div>
+<!-- Lodging Chip -->
+<div class="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#7B4AD9]/10 border border-[#7B4AD9]/20">
+<span class="material-symbols-outlined text-sm text-[#7B4AD9]">hotel</span>
+<span class="text-xs font-bold text-[#7B4AD9] font-label">Lodging $350.00</span>
+</div>
+<!-- Other Chip -->
+<div class="flex-shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#2D7D7D]/10 border border-[#2D7D7D]/20">
+<span class="material-symbols-outlined text-sm text-[#2D7D7D]">payments</span>
+<span class="text-xs font-bold text-[#2D7D7D] font-label">Other $74.82</span>
+</div>
+</div>
+</section>
+<!-- Sort Toggle & List Header -->
+<section class="flex items-center justify-between px-1">
+<h2 class="text-xs font-medium uppercase tracking-widest text-[#4A6B53]">Recent Receipts</h2>
+<div class="flex bg-white/50 rounded-lg p-1 border border-neutral-200">
+<button class="text-[10px] px-3 py-1.5 rounded-md font-bold transition-all bg-primary text-white" id="sortDate">Date</button>
+<button class="text-[10px] px-3 py-1.5 rounded-md font-bold transition-all text-neutral-500 hover:text-primary" id="sortAmount">Amount</button>
+</div>
+</section>
+<!-- Receipt List -->
+<div class="space-y-3">
+<!-- Receipt 1: Uber to LHR -->
+<div class="group relative bg-[#FDF8F5] rounded-lg p-4 flex items-center gap-4 receipt-card-shadow active:scale-[0.98] transition-transform cursor-pointer border-l-4 border-[#4A90D9]">
+<div class="w-12 h-12 bg-[#FAF5F0] rounded-lg flex items-center justify-center text-[#4A90D9]">
+<span class="material-symbols-outlined text-2xl">local_taxi</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h3 class="font-headline font-bold text-neutral-800 truncate">Uber to LHR</h3>
+<span class="font-headline font-bold text-[#C25A3C] text-lg">$85.00</span>
+</div>
+<div class="flex items-center gap-3 mt-1">
+<span class="text-xs text-neutral-500 font-label">Oct 15, 2026</span>
+<div class="flex items-center gap-1.5 px-2 py-0.5 bg-[#C28D3C]/10 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-[#C28D3C]"></span>
+<span class="text-[10px] font-bold text-[#C28D3C] uppercase tracking-tighter">Processing</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Receipt 2: Blue Bottle Coffee -->
+<div class="group relative bg-[#FDF8F5] rounded-lg p-4 flex items-center gap-4 receipt-card-shadow active:scale-[0.98] transition-transform cursor-pointer border-l-4 border-[#E07B3C]">
+<div class="w-12 h-12 bg-[#FAF5F0] rounded-lg flex items-center justify-center text-[#E07B3C]">
+<span class="material-symbols-outlined text-2xl">coffee</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h3 class="font-headline font-bold text-neutral-800 truncate">Blue Bottle Coffee</h3>
+<span class="font-headline font-bold text-[#C25A3C] text-lg">$12.40</span>
+</div>
+<div class="flex items-center gap-3 mt-1">
+<span class="text-xs text-neutral-500 font-label">Oct 14, 2026</span>
+<div class="flex items-center gap-1.5 px-2 py-0.5 bg-[#2D7D7D]/10 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-[#2D7D7D]"></span>
+<span class="text-[10px] font-bold text-[#2D7D7D] uppercase tracking-tighter">Confirmed</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Receipt 3: The Standard Hotel -->
+<div class="group relative bg-[#FDF8F5] rounded-lg p-4 flex items-center gap-4 receipt-card-shadow active:scale-[0.98] transition-transform cursor-pointer border-l-4 border-[#7B4AD9]">
+<div class="w-12 h-12 bg-[#FAF5F0] rounded-lg flex items-center justify-center text-[#7B4AD9]">
+<span class="material-symbols-outlined text-2xl">hotel</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex justify-between items-start">
+<h3 class="font-headline font-bold text-neutral-800 truncate">The Standard Hotel</h3>
+<span class="font-headline font-bold text-[#C25A3C] text-lg">$650.00</span>
+</div>
+<div class="flex items-center gap-3 mt-1">
+<span class="text-xs text-neutral-500 font-label">Oct 13, 2026</span>
+<div class="flex items-center gap-1.5 px-2 py-0.5 bg-[#2D7D7D]/10 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-[#2D7D7D]"></span>
+<span class="text-[10px] font-bold text-[#2D7D7D] uppercase tracking-tighter">Confirmed</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Hidden Empty State -->
+<section class="hidden py-12 flex flex-col items-center justify-center text-center" id="emptyState">
+<div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mb-4 text-[#4A6B53]/20">
+<span class="material-symbols-outlined text-4xl">receipt_long</span>
+</div>
+<h3 class="font-headline font-bold text-neutral-800 text-lg mb-2">No receipts in this trip</h3>
+<p class="text-sm text-neutral-500 max-w-[240px] mb-6">Start tracking your expenses by capturing your first receipt for this trip.</p>
+<button class="bg-[#C25A3C] text-white px-6 py-3 rounded-full font-bold font-label flex items-center gap-2 active:scale-95 transition-transform">
+<span class="material-symbols-outlined">add_a_photo</span>
+                Capture a receipt
+            </button>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center h-20 px-6 pb-4 bg-[#FDF8F5] dark:bg-neutral-800 z-50 rounded-t-xl border-t border-[#FDF8F5] dark:border-neutral-700 shadow-lg">
+<button class="flex flex-col items-center justify-center text-[#4A6B53] opacity-60 dark:text-neutral-400 hover:text-[#2D7D7D] active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label text-xs font-medium uppercase tracking-wider">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#C25A3C] dark:text-[#C25A3C] hover:text-[#2D7D7D] active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">travel_explore</span>
+<span class="font-label text-xs font-medium uppercase tracking-wider">Trips</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#4A6B53] opacity-60 dark:text-neutral-400 hover:text-[#2D7D7D] active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined">add_a_photo</span>
+<span class="font-label text-xs font-medium uppercase tracking-wider">Capture</span>
+</button>
+<button class="flex flex-col items-center justify-center text-[#4A6B53] opacity-60 dark:text-neutral-400 hover:text-[#2D7D7D] active:scale-90 transition-transform duration-200">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label text-xs font-medium uppercase tracking-wider">Settings</span>
+</button>
+</nav>
+<!-- Floating Action Button (FAB) -->
+<button class="fixed right-6 bottom-24 w-14 h-14 bg-[#C25A3C] text-white rounded-full shadow-xl flex items-center justify-center active:scale-90 transition-transform z-40">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+<script>
+        // Micro-interactions for Sort Buttons
+        const sortDate = document.getElementById('sortDate');
+        const sortAmount = document.getElementById('sortAmount');
+
+        const toggleActive = (active, inactive) => {
+            active.classList.add('bg-primary', 'text-white');
+            active.classList.remove('text-neutral-500', 'hover:text-primary');
+            inactive.classList.remove('bg-primary', 'text-white');
+            inactive.classList.add('text-neutral-500', 'hover:text-primary');
+        };
+
+        sortDate.addEventListener('click', () => toggleActive(sortDate, sortAmount));
+        sortAmount.addEventListener('click', () => toggleActive(sortAmount, sortDate));
+
+        // Horizontal scroll momentum physics simulation (simplified)
+        const scrollContainer = document.querySelector('.no-scrollbar');
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        scrollContainer.addEventListener('mousedown', (e) => {
+            isDown = true;
+            startX = e.pageX - scrollContainer.offsetLeft;
+            scrollLeft = scrollContainer.scrollLeft;
+        });
+        scrollContainer.addEventListener('mouseleave', () => { isDown = false; });
+        scrollContainer.addEventListener('mouseup', () => { isDown = false; });
+        scrollContainer.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - scrollContainer.offsetLeft;
+            const walk = (x - startX) * 2;
+            scrollContainer.scrollLeft = scrollLeft - walk;
+        });
+    </script>
+</body></html>

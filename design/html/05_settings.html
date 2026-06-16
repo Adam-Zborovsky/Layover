@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Layover - Settings</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&amp;family=Space+Grotesk:wght@300..700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            primary: "#C25A3C",
+            secondary: "#4A6B53",
+            tertiary: "#2D7D7D",
+            surface: "#FDF8F5",
+            background: "#FAF5F0",
+            onPrimary: "#FFFFFF",
+            onSecondary: "#FFFFFF",
+            onBackground: "#1A1A1A"
+          },
+          borderRadius: {
+            "DEFAULT": "8px",
+            "lg": "8px",
+            "xl": "12px",
+            "full": "9999px"
+          },
+          fontFamily: {
+            headline: ["Space Grotesk", "sans-serif"],
+            display: ["Space Grotesk", "sans-serif"],
+            body: ["DM Sans", "sans-serif"],
+            label: ["DM Sans", "sans-serif"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      background-color: #FAF5F0;
+      font-family: 'DM Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      vertical-align: middle;
+    }
+    .active-nav-icon {
+      font-variation-settings: 'FILL' 1;
+    }
+    .custom-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #C25A3C;
+      cursor: pointer;
+      border-radius: 50%;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .custom-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      background: #C25A3C;
+      cursor: pointer;
+      border-radius: 50%;
+      border: 2px solid white;
+    }
+    /* Simple smooth transitions */
+    .transition-all-custom {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="antialiased text-onBackground pb-24">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-40 bg-[#FAF5F0] dark:bg-neutral-900 flex items-center justify-between px-4 h-16 w-full">
+<div class="flex items-center gap-4">
+<button class="active:scale-95 transition-transform text-[#C25A3C] hover:opacity-80">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="font-headline text-xl font-bold text-[#C25A3C]">Settings</h1>
+</div>
+<div class="flex items-center gap-3">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="font-label text-xs font-medium text-secondary">Cloud Sync Active</span>
+</div>
+</header>
+<main class="max-w-2xl mx-auto px-4 pt-4 space-y-6">
+<!-- Section 1: Server Connection Card -->
+<section class="bg-[#FDF8F5] p-5 rounded-lg shadow-sm border border-neutral-100/50">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-secondary">database</span>
+<h2 class="font-headline text-lg font-bold">Server Connection</h2>
+</div>
+<div class="space-y-6">
+<div class="relative group">
+<label class="block text-xs font-bold text-secondary/60 mb-1 uppercase tracking-wider">Server URL</label>
+<input class="w-full bg-transparent border-0 border-b-2 border-neutral-200 focus:border-primary focus:ring-0 transition-colors py-2 text-sm font-body" type="text" value="https://api.layover-tracker.io/v1"/>
+</div>
+<div class="relative group">
+<label class="block text-xs font-bold text-secondary/60 mb-1 uppercase tracking-wider">Auth Token</label>
+<div class="flex items-center border-b-2 border-neutral-200 focus-within:border-primary transition-colors">
+<input class="w-full bg-transparent border-0 focus:ring-0 py-2 text-sm font-body" type="password" value="••••••••••••••••"/>
+<button class="text-secondary/50 hover:text-primary transition-colors">
+<span class="material-symbols-outlined px-2">visibility</span>
+</button>
+</div>
+</div>
+<div class="flex items-center justify-between pt-2">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+<span class="text-sm font-medium text-secondary">Connected</span>
+</div>
+<button class="border-2 border-secondary text-secondary px-4 py-2 rounded-lg text-sm font-bold active:scale-95 transition-transform hover:bg-secondary/5">
+            Test Connection
+          </button>
+</div>
+</div>
+</section>
+<!-- Section 2: Naming Template Card -->
+<section class="bg-[#FDF8F5] p-5 rounded-lg shadow-sm border border-neutral-100/50">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-secondary">label</span>
+<h2 class="font-headline text-lg font-bold">Naming Template</h2>
+</div>
+<div class="space-y-4">
+<div class="p-3 bg-white/50 border border-neutral-100 rounded-lg">
+<input class="w-full bg-transparent border-0 focus:ring-0 text-sm font-mono text-primary" type="text" value="{date}_{merchant}_{category}_{total}"/>
+<p class="mt-2 text-xs italic text-secondary/70">e.g. 2026-06-14_Hertz_CarService_$84.20</p>
+</div>
+<div class="flex flex-wrap gap-2">
+<button class="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-xs font-bold hover:bg-primary/20 transition-colors">{date}</button>
+<button class="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-xs font-bold hover:bg-primary/20 transition-colors">{merchant}</button>
+<button class="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-xs font-bold hover:bg-primary/20 transition-colors">{category}</button>
+<button class="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-xs font-bold hover:bg-primary/20 transition-colors">{total}</button>
+<button class="bg-primary/10 text-primary px-3 py-1.5 rounded-full text-xs font-bold hover:bg-primary/20 transition-colors">{currency}</button>
+<button class="border border-primary/20 text-primary px-3 py-1.5 rounded-full text-xs font-bold hover:bg-primary/5 transition-colors">+ Custom</button>
+</div>
+</div>
+</section>
+<!-- Section 3: AI Processing Card -->
+<section class="bg-[#FDF8F5] p-5 rounded-lg shadow-sm border border-neutral-100/50">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-secondary">psychology</span>
+<h2 class="font-headline text-lg font-bold">AI Processing</h2>
+</div>
+<div class="space-y-8">
+<div class="bg-neutral-100/50 p-1 rounded-lg flex">
+<button class="flex-1 py-2 text-xs font-bold rounded-md bg-primary text-white shadow-sm transition-all">Gemini 2.5 Flash</button>
+<button class="flex-1 py-2 text-xs font-bold text-secondary/60 hover:text-secondary transition-all">Gemini 3.1 Pro</button>
+</div>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<label class="text-sm font-bold text-secondary">Confidence Threshold</label>
+<span class="text-primary font-bold text-sm">85%</span>
+</div>
+<input class="w-full h-2 bg-neutral-200 rounded-lg appearance-none cursor-pointer accent-primary custom-slider" max="100" min="0" type="range" value="85"/>
+<p class="text-xs text-secondary/70 leading-relaxed">Receipts below this threshold will be flagged for review to ensure expense accuracy.</p>
+</div>
+</div>
+</section>
+<!-- Section 4: Preferences Card -->
+<section class="bg-[#FDF8F5] p-5 rounded-lg shadow-sm border border-neutral-100/50">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-secondary">settings_suggest</span>
+<h2 class="font-headline text-lg font-bold">Preferences</h2>
+</div>
+<div class="space-y-6">
+<div class="flex items-center justify-between">
+<label class="text-sm font-bold text-secondary">Default Currency</label>
+<div class="relative">
+<select class="appearance-none bg-white border border-neutral-200 rounded-lg px-4 py-1.5 pr-8 text-sm font-medium focus:ring-1 focus:ring-primary focus:border-primary">
+<option>USD ($)</option>
+<option>EUR (€)</option>
+<option>GBP (£)</option>
+<option>JPY (¥)</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-1.5 text-secondary text-sm pointer-events-none">expand_more</span>
+</div>
+</div>
+<div class="space-y-4">
+<h3 class="text-xs font-bold text-secondary/60 uppercase tracking-wider">Active Categories</h3>
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="w-2.5 h-2.5 rounded-full bg-orange-400"></span>
+<span class="text-sm font-medium">Meals &amp; Drinks</span>
+</div>
+<div class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-secondary"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="w-2.5 h-2.5 rounded-full bg-blue-400"></span>
+<span class="text-sm font-medium">Transportation</span>
+</div>
+<div class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-secondary"></div>
+</div>
+</div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>
+<span class="text-sm font-medium">Lodging</span>
+</div>
+<div class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-9 h-5 bg-neutral-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-secondary"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Section 5: Data Card -->
+<section class="bg-[#FDF8F5] p-5 rounded-lg shadow-sm border border-neutral-100/50 mb-8">
+<div class="flex items-center gap-2 mb-6">
+<span class="material-symbols-outlined text-secondary">cloud_done</span>
+<h2 class="font-headline text-lg font-bold">Data &amp; Backup</h2>
+</div>
+<div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+<div>
+<p class="text-sm font-bold text-secondary">Storage Usage</p>
+<p class="text-xs text-secondary/70">12 receipts, 24 MB used on device</p>
+</div>
+<button class="border-2 border-secondary text-secondary px-6 py-2.5 rounded-lg text-sm font-bold active:scale-95 transition-transform hover:bg-secondary/5 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm">download</span>
+          Export Backup
+        </button>
+</div>
+</section>
+<!-- Asymmetric Aesthetic Detail (Bottom Illustration Area) -->
+<div class="relative h-48 w-full rounded-2xl overflow-hidden mt-12 bg-secondary/10 group">
+<div class="absolute inset-0 opacity-20">
+<div class="absolute inset-0" style="background-image: radial-gradient(#C25A3C 0.5px, transparent 0.5px); background-size: 16px 16px;"></div>
+</div>
+<div class="relative z-10 p-6 flex flex-col justify-end h-full">
+<h3 class="font-headline text-2xl font-bold text-secondary opacity-40 leading-tight">Precision in<br/>every pixel.</h3>
+<p class="text-xs font-label text-secondary mt-2">Layover v2.4.1 (Stable Build)</p>
+</div>
+<div class="absolute -right-12 -top-12 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-2 py-3 bg-[#FDF8F5] dark:bg-neutral-800 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-[#4A6B53] opacity-70 hover:bg-[#FAF5F0] dark:hover:bg-neutral-700 px-4 py-1 rounded-lg transition-all active:scale-95" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-label text-xs font-medium tracking-tight">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#4A6B53] opacity-70 hover:bg-[#FAF5F0] dark:hover:bg-neutral-700 px-4 py-1 rounded-lg transition-all active:scale-95" href="#">
+<span class="material-symbols-outlined">flight_takeoff</span>
+<span class="font-label text-xs font-medium tracking-tight">Trips</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#4A6B53] opacity-70 hover:bg-[#FAF5F0] dark:hover:bg-neutral-700 px-4 py-1 rounded-lg transition-all active:scale-95" href="#">
+<span class="material-symbols-outlined">ios_share</span>
+<span class="font-label text-xs font-medium tracking-tight">Export</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#C25A3C] font-bold hover:bg-[#FAF5F0] dark:hover:bg-neutral-700 px-4 py-1 rounded-lg transition-all active:scale-95" href="#">
+<span class="material-symbols-outlined active-nav-icon">settings</span>
+<span class="font-label text-xs font-medium tracking-tight">Settings</span>
+</a>
+</nav>
+<script>
+    // Simple micro-interactions
+    document.querySelectorAll('button, a').forEach(el => {
+      el.addEventListener('click', () => {
+        if (!el.classList.contains('active:scale-95')) {
+          el.style.transform = 'scale(0.97)';
+          setTimeout(() => el.style.transform = 'scale(1)', 100);
+        }
+      });
+    });
+
+    // Slider value update interaction
+    const slider = document.querySelector('.custom-slider');
+    const valDisplay = slider?.previousElementSibling?.querySelector('.text-primary');
+    if(slider && valDisplay) {
+      slider.addEventListener('input', (e) => {
+        valDisplay.textContent = e.target.value + '%';
+      });
+    }
+
+    // Toggle switch logic simulation
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+      checkbox.addEventListener('change', function() {
+        const parent = this.parentElement.parentElement.parentElement;
+        if (!this.checked) {
+          parent.style.opacity = '0.5';
+        } else {
+          parent.style.opacity = '1';
+        }
+      });
+    });
+  </script>
+</body></html>

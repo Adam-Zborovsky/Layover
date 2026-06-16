@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#C25A3C", // Terracotta
+              secondary: "#4A6B53", // Deep Sage
+              tertiary: "#2D7D7D", // Teal
+              surface: "#FDF8F5", // Warm Neutral
+              background: "#FAF5F0", // Cream
+              accent: "#E07B3C", // Category Orange
+              warning: "#C28D3C", // Amber
+            },
+            borderRadius: {
+              'DEFAULT': '0.25rem',
+              'lg': '0.5rem',
+              'xl': '0.75rem',
+              '2xl': '1rem',
+              'full': '9999px',
+              'round-eight': '0.5rem' // As per "ROUND_EIGHT" mandate
+            },
+            fontFamily: {
+              headline: ["Space Grotesk", "sans-serif"],
+              display: ["Space Grotesk", "sans-serif"],
+              body: ["DM Sans", "sans-serif"],
+              label: ["DM Sans", "sans-serif"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .fill-icon {
+            font-variation-settings: 'FILL' 1;
+        }
+        body {
+            background-color: #FAF5F0;
+            color: #1A1C1E;
+            -webkit-tap-highlight-color: transparent;
+        }
+        /* Smooth scrolling for mobile */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body selection:bg-primary/20">
+<!-- Top App Bar -->
+<header class="bg-[#FAF5F0] dark:bg-[#1A1C1E] sticky top-0 left-0 w-full z-40 transition-all duration-300">
+<div class="flex items-center justify-between px-6 py-4 w-full">
+<div class="flex flex-col">
+<h1 class="font-headline text-2xl font-bold tracking-tight text-[#C25A3C]">Layover</h1>
+<p class="font-label text-xs font-medium text-secondary opacity-80">24 receipts · $1,240.50</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="hover:opacity-80 transition-opacity active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-primary">search</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary/10">
+<img alt="User Profile" data-alt="A professional headshot of a person with a warm, friendly expression, set against a clean, minimalist studio background. The lighting is soft and high-key, aligning with the warm neutral surface of a premium mobile app. The style is modern and high-resolution, evoking a sense of trustworthiness and personal service in a financial tech context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAk5ITY1yGhE1YIgpvwHa2Z7RY-eeoscC51AZvu8ojzDcyMdhkrWKoIvFWa66qNlsGyOXyU9UBQrEJDft0aUIK3UK4hgQ_2-PyIaLoGiLxOdwMCQVr4OhSa6KGVlowNBAvIK6I03tRHMA52jx9REwC0SrzsLadMlsGos1nAmwYiNbPAQfLhxW2aPLhifnG5nE-mtD7bJBUiDBT6AxlGK1D4P41Vr54VxvaaqSR_DCUmqS1hQdE4H1DhgCYHTekDruLk2f2jvL4BUJI"/>
+</div>
+</div>
+</div>
+</header>
+<main class="pb-24 pt-2">
+<!-- Search Bar Section -->
+<div class="px-6 mb-6">
+<div class="relative flex items-center group">
+<span class="material-symbols-outlined absolute left-4 text-secondary/60 group-focus-within:text-primary transition-colors">search</span>
+<input class="w-full bg-surface border-none ring-1 ring-secondary/10 focus:ring-2 focus:ring-primary h-12 pl-12 pr-4 rounded-full font-body text-sm transition-all shadow-sm" placeholder="Search receipts..." type="text"/>
+</div>
+</div>
+<!-- Filter Chips -->
+<div class="px-6 mb-8 overflow-x-auto no-scrollbar flex items-center gap-3">
+<button class="bg-primary text-white px-5 py-2 rounded-full font-label text-sm font-medium shadow-sm whitespace-nowrap active:scale-95 transition-transform">
+                All
+            </button>
+<button class="bg-transparent border border-secondary text-secondary px-5 py-2 rounded-full font-label text-sm font-medium whitespace-nowrap active:scale-95 transition-transform">
+                Needs Review
+            </button>
+<button class="bg-transparent border border-secondary text-secondary px-5 py-2 rounded-full font-label text-sm font-medium whitespace-nowrap active:scale-95 transition-transform">
+                Confirmed
+            </button>
+<button class="bg-transparent border border-secondary text-secondary px-5 py-2 rounded-full font-label text-sm font-medium whitespace-nowrap active:scale-95 transition-transform">
+                Processing
+            </button>
+</div>
+<!-- Receipt List -->
+<div class="px-6 space-y-4">
+<!-- Receipt Card 1 -->
+<div class="bg-surface rounded-xl p-4 flex gap-4 items-center shadow-sm relative overflow-hidden border-l-4 border-[#E07B3C] active:scale-[0.98] transition-all">
+<div class="w-14 h-14 rounded-lg bg-background flex-shrink-0 overflow-hidden border border-secondary/5">
+<img alt="Blue Bottle Coffee" class="w-full h-full object-cover" data-alt="A close-up aesthetic shot of a minimalist coffee shop counter with a ceramic cup of latte art and a subtle wood texture in the background. The lighting is warm and natural, creating an inviting and personal atmosphere. The image feels high-end and detailed, matching the sophisticated terracotta and sage branding of a luxury travel tool." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB2N3OcqyShAsTeY4AEp3FLEn0d8aEnV6T2aP3v-kTh5w3MpgtVAfkMcYhajeq9iu7fqAmLzryHa8KdZr01orIfyC5ZFy-VanpvG2lifjehHlWpvXUSKm_vrjO88eRHId-4MFwwygK9Qly_GKMl6LE-O46h04YmPLRQpCxtg3R72vfDCkNr5UjWgiwZvFspoI0mBwnKTSkzM5YWzG_q9i4zAvwayc31sleNnOgy4Vjlu3Elufh2_Yax9ARR-I0iSKgguGsuem99Kq0"/>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-headline font-bold text-base truncate text-neutral-800">Blue Bottle Coffee</h3>
+<span class="font-headline font-bold text-primary">$5.50</span>
+</div>
+<div class="flex items-center gap-2 mb-2">
+<span class="text-xs font-label text-secondary/60">Oct 24, 2023</span>
+<div class="px-2 py-0.5 rounded-full bg-[#E07B3C]/15 text-[#E07B3C] text-[10px] font-bold tracking-tight uppercase">
+                            Food
+                        </div>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="text-[11px] font-medium text-tertiary">Confirmed</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary/30">chevron_right</span>
+</div>
+<!-- Receipt Card 2 -->
+<div class="bg-surface rounded-xl p-4 flex gap-4 items-center shadow-sm relative overflow-hidden border-l-4 border-[#4A6B53] active:scale-[0.98] transition-all">
+<div class="w-14 h-14 rounded-lg bg-background flex-shrink-0 overflow-hidden border border-secondary/5">
+<img alt="Uber" class="w-full h-full object-cover" data-alt="An abstract, high-shutter-speed evening shot of city lights through a car window, capturing the motion and efficiency of urban transport. The colors are rich with deep greens and warm highlights, reflecting a premium travel experience. The composition is clean and modern, evoking professional reliability and fast-paced travel." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAisCNF_xQDAMawiruNbymUY8gLoidn5OxUApO5471PF1pd11k96_XQZP-NO36nCxZ4upu13iV5KXBkIFBvgruWE8F_fI2CQ8RBprv_Guk-0uDAOwSJ4WHP1j9V4TZhihfisLLs5dZoPhI7ydLN-iLstERywV3OvqAEWJjqU7ISYw4lAEUozpUi3SeXsJzyM2y8VKQC_tCReIwOSo9K4v7Vf-abZ2LLmtTwoVRGdshy9qSlVzBqpTKbKCuzFZXGvLzaARrDWy6mvk"/>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-headline font-bold text-base truncate text-neutral-800">Uber Trip</h3>
+<span class="font-headline font-bold text-primary">$42.80</span>
+</div>
+<div class="flex items-center gap-2 mb-2">
+<span class="text-xs font-label text-secondary/60">Oct 23, 2023</span>
+<div class="px-2 py-0.5 rounded-full bg-secondary/15 text-secondary text-[10px] font-bold tracking-tight uppercase">
+                            Transport
+                        </div>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-warning"></span>
+<span class="text-[11px] font-medium text-warning">Processing</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary/30">chevron_right</span>
+</div>
+<!-- Receipt Card 3 -->
+<div class="bg-surface rounded-xl p-4 flex gap-4 items-center shadow-sm relative overflow-hidden border-l-4 border-tertiary active:scale-[0.98] transition-all">
+<div class="w-14 h-14 rounded-lg bg-background flex-shrink-0 overflow-hidden border border-secondary/5">
+<img alt="The Standard Hotel" class="w-full h-full object-cover" data-alt="A luxurious, high-perspective view of a modern hotel lobby lounge with designer furniture and architectural plants. The space is filled with soft, diffused sunlight, emphasizing clean lines and high-quality textures. The palette is dominated by warm neutrals and organic greens, aligning perfectly with a high-end expense tracking identity for professional travelers." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0azTTgkLdjuVyZBNXHFY3eigqXhlhpT1BEffUYEhPXXH4SXZUWzxKnBMLOimW2FXS24bf9eCK2DXO3G6ZuiPcNkvnZybHalqbtHUNnmijD4Stqi2sgoycQRKn7pc08RGAbb0jIzH8Ns4s8r75XbHdRp-fg5-5b4YH0LE8YJ12mRj8WQliEeKG6F_lONs4r_Jcn72sXehTsQJntt9ntzuGInOWt0Ru_rc26mCONE79mgO_8ONgyJTFBKutzgICqtStCTgConSxerY"/>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-headline font-bold text-base truncate text-neutral-800">The Standard High Line</h3>
+<span class="font-headline font-bold text-primary">$895.00</span>
+</div>
+<div class="flex items-center gap-2 mb-2">
+<span class="text-xs font-label text-secondary/60">Oct 22, 2023</span>
+<div class="px-2 py-0.5 rounded-full bg-tertiary/15 text-tertiary text-[10px] font-bold tracking-tight uppercase">
+                            Lodging
+                        </div>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="text-[11px] font-medium text-tertiary">Confirmed</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary/30">chevron_right</span>
+</div>
+<!-- Receipt Card 4 -->
+<div class="bg-surface rounded-xl p-4 flex gap-4 items-center shadow-sm relative overflow-hidden border-l-4 border-[#C25A3C] active:scale-[0.98] transition-all">
+<div class="w-14 h-14 rounded-lg bg-background flex-shrink-0 overflow-hidden border border-secondary/5">
+<img alt="Apple Store" class="w-full h-full object-cover" data-alt="A sleek, modern technology showroom with clean glass surfaces and warm wood paneling. The lighting is precise and bright, highlighting high-end electronic products with a focus on geometric design. The scene is professional and orderly, representing financial precision and the efficient world of business expenses and technological tools." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAq4yHK4riykL2JN-Ok63qaa3-_XeQxH0eaOQDS-B9RkjQy6dfoAEv9Bf86MvCfyDLmi6NJAheamhxnjWNcA58C_HAZGw3umRwEDSZQAttrnZf6JxY65jSJJrBBXmfCr5lMwz_IaADptrCSoct7almT4_kf4k3h0nGTIH9G4Gljsh8r1Jprd6QdS1i85xkr9B13dRsmVRh0t5-PTqnBGst_LRrVCPBMxAp5oUN27PPHOrHOEygRhPrksT1p6vz1WbEprRE5_tfTzH8"/>
+</div>
+<div class="flex-grow min-w-0">
+<div class="flex justify-between items-start mb-1">
+<h3 class="font-headline font-bold text-base truncate text-neutral-800">Apple Store</h3>
+<span class="font-headline font-bold text-primary">$297.20</span>
+</div>
+<div class="flex items-center gap-2 mb-2">
+<span class="text-xs font-label text-secondary/60">Oct 20, 2023</span>
+<div class="px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-bold tracking-tight uppercase">
+                            Tech
+                        </div>
+</div>
+<div class="flex items-center gap-1.5">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="text-[11px] font-medium text-tertiary">Confirmed</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-secondary/30">chevron_right</span>
+</div>
+</div>
+<!-- Empty State (Hidden) -->
+<div class="hidden flex-col items-center justify-center py-24 px-12 text-center" id="empty-state">
+<span class="material-symbols-outlined text-6xl text-secondary/20 mb-4">receipt_long</span>
+<h2 class="font-headline font-bold text-xl text-neutral-800 mb-2">No receipts yet</h2>
+<p class="text-secondary/60 text-sm">Snap your first receipt to start tracking your business expenses with AI precision.</p>
+</div>
+</main>
+<!-- FAB -->
+<button class="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 active:scale-90 transition-all z-50">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">photo_camera</span>
+</button>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-3 bg-[#FDF8F5] dark:bg-[#1C1B1F] shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] rounded-t-xl">
+<a class="flex flex-col items-center justify-center text-[#C25A3C] dark:text-[#C25A3C] font-bold active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined fill-icon" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label text-xs font-medium tracking-tight">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#4A6B53] dark:text-neutral-400 opacity-70 hover:bg-[#FAF5F0] dark:hover:bg-neutral-800 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">travel</span>
+<span class="font-label text-xs font-medium tracking-tight">Trips</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#4A6B53] dark:text-neutral-400 opacity-70 hover:bg-[#FAF5F0] dark:hover:bg-neutral-800 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">ios_share</span>
+<span class="font-label text-xs font-medium tracking-tight">Export</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#4A6B53] dark:text-neutral-400 opacity-70 hover:bg-[#FAF5F0] dark:hover:bg-neutral-800 active:scale-90 transition-all duration-200" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label text-xs font-medium tracking-tight">Settings</span>
+</a>
+</nav>
+<script>
+        // Simple Interaction logic
+        document.querySelectorAll('button, .bg-surface').forEach(el => {
+            el.addEventListener('touchstart', function() {
+                this.classList.add('scale-95');
+            });
+            el.addEventListener('touchend', function() {
+                this.classList.remove('scale-95');
+            });
+        });
+
+        // Pull to refresh simulation
+        let touchstartY = 0;
+        document.addEventListener('touchstart', e => {
+            touchstartY = e.touches[0].clientY;
+        });
+        document.addEventListener('touchend', e => {
+            const touchendY = e.changedTouches[0].clientY;
+            if (touchendY > touchstartY + 100 && window.scrollY === 0) {
+                console.log('Refreshing receipts...');
+                // Add a small visual feedback if desired
+            }
+        });
+    </script>
+</body></html>

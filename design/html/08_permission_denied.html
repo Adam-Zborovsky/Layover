@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&amp;family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              primary: "#C25A3C",
+              secondary: "#4A6B53",
+              tertiary: "#2D7D7D",
+              surface: "#FDF8F5",
+              background: "#FAF5F0",
+            },
+            borderRadius: {
+              "DEFAULT": "0.25rem",
+              "lg": "0.5rem",
+              "xl": "0.75rem",
+              "full": "9999px",
+              "eight": "0.5rem",
+            },
+            fontFamily: {
+              headline: ["Space Grotesk", "sans-serif"],
+              display: ["Space Grotesk", "sans-serif"],
+              body: ["DM Sans", "sans-serif"],
+              label: ["DM Sans", "sans-serif"],
+            },
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .font-headline { font-family: 'Space Grotesk', sans-serif; }
+      .font-body { font-family: 'DM Sans', sans-serif; }
+      
+      @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+        100% { transform: translateY(0px); }
+      }
+      .animate-float {
+        animation: float 4s ease-in-out infinite;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-body text-secondary antialiased overflow-hidden h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="w-full top-0 left-0 absolute z-50 flex items-center justify-between px-4 h-16 w-full bg-transparent">
+<div class="flex items-center gap-4">
+<button class="active:scale-95 transition-transform hover:bg-white/10 p-2 rounded-full text-primary">
+<span class="material-symbols-outlined text-2xl">arrow_back</span>
+</button>
+<h1 class="font-headline text-lg font-bold text-primary">Capture Receipt</h1>
+</div>
+<div class="flex items-center">
+<button class="active:scale-95 transition-transform hover:bg-white/10 p-2 rounded-full text-primary">
+<span class="material-symbols-outlined text-2xl">flash_on</span>
+</button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col items-center justify-center px-8 relative overflow-hidden">
+<!-- Atmospheric Background Elements -->
+<div class="absolute inset-0 z-0 pointer-events-none opacity-40">
+<div class="absolute top-1/4 -left-20 w-64 h-64 bg-primary/10 rounded-full blur-3xl"></div>
+<div class="absolute bottom-1/4 -right-20 w-72 h-72 bg-secondary/10 rounded-full blur-3xl"></div>
+</div>
+<div class="z-10 w-full max-w-md text-center flex flex-col items-center">
+<!-- Icon Container -->
+<div class="mb-8 relative">
+<div class="animate-float flex items-center justify-center w-32 h-32 bg-surface rounded-eight shadow-sm border border-primary/10">
+<span class="material-symbols-outlined text-6xl text-primary/40 select-none">no_photography</span>
+</div>
+<div class="absolute -bottom-2 -right-2 bg-primary text-white w-10 h-10 rounded-full flex items-center justify-center shadow-lg">
+<span class="material-symbols-outlined text-xl">block</span>
+</div>
+</div>
+<!-- Typography Cluster -->
+<h2 class="font-headline text-3xl font-bold text-primary tracking-tight mb-4">
+                Camera access needed
+            </h2>
+<p class="font-body text-lg text-secondary leading-relaxed mb-10 max-w-[280px] mx-auto">
+                Layover needs camera permission to scan your receipts and track expenses.
+            </p>
+<!-- CTA Container -->
+<div class="w-full space-y-4 px-4">
+<button class="w-full py-4 px-6 border-2 border-primary text-primary font-headline font-bold text-lg rounded-eight active:scale-95 transition-all duration-200 hover:bg-primary/5">
+                    Open Settings
+                </button>
+<button class="w-full py-3 px-6 text-secondary/60 font-body font-medium text-sm hover:text-secondary transition-colors">
+                    Maybe later
+                </button>
+</div>
+</div>
+<!-- Detail Decorative Element -->
+<div class="absolute bottom-24 left-1/2 -translate-x-1/2 opacity-20">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Hidden per Shell Visibility Rules for Transactional/Focused screens) -->
+<!-- We omit navigation here to prioritize the resolution of the permission blocker -->
+<script>
+        // Micro-interactions
+        document.addEventListener('DOMContentLoaded', () => {
+            const primaryBtn = document.querySelector('button.border-primary');
+            
+            primaryBtn.addEventListener('click', () => {
+                // Simulate ripple or feedback
+                console.log('Navigating to system settings...');
+                primaryBtn.classList.add('bg-primary', 'text-white');
+                setTimeout(() => {
+                    primaryBtn.classList.remove('bg-primary', 'text-white');
+                }, 200);
+            });
+        });
+    </script>
+</body></html>

@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { fetchTrips, createTrip, deleteTrip } from "../api/client";
+import { colors, typography, spacing, radii } from "../ui/theme";
 
 interface TripItem {
   id: string;
@@ -18,6 +19,8 @@ interface TripItem {
   startDate: string;
   endDate: string;
   receiptCount: number;
+  totalAmount?: number;
+  currency?: string;
 }
 
 export function TripsScreen({ navigation }: { navigation: any }) {
@@ -26,6 +29,7 @@ export function TripsScreen({ navigation }: { navigation: any }) {
   const [newName, setNewName] = useState("");
   const [newStart, setNewStart] = useState("");
   const [newEnd, setNewEnd] = useState("");
+  const [newNotes, setNewNotes] = useState("");
 
   const load = useCallback(async () => {
     try {
@@ -44,16 +48,22 @@ export function TripsScreen({ navigation }: { navigation: any }) {
 
   async function handleCreate() {
     if (!newName.trim() || !newStart.trim() || !newEnd.trim()) {
-      Alert.alert("Missing fields", "Please fill in all fields");
+      Alert.alert("Missing fields", "Please fill in trip name, start date, and end date");
       return;
     }
 
     try {
-      await createTrip({ name: newName, startDate: newStart, endDate: newEnd });
+      await createTrip({
+        name: newName,
+        startDate: newStart,
+        endDate: newEnd,
+        notes: newNotes,
+      });
       setModalVisible(false);
       setNewName("");
       setNewStart("");
       setNewEnd("");
+      setNewNotes("");
       load();
     } catch (err: any) {
       Alert.alert("Error", err.message || "Failed to create trip");
@@ -76,33 +86,61 @@ export function TripsScreen({ navigation }: { navigation: any }) {
 
   return (
     <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Trips</Text>
+        <Text style={styles.subtitle}>
+          {trips.length} active trip{trips.length !== 1 ? "s" : ""}
+        </Text>
+      </View>
+
       <FlatList
         data={trips}
         keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.list}
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.tripCard}
             onPress={() => navigation.navigate("TripDetail", { id: item.id })}
             onLongPress={() => handleDelete(item.id)}
+            activeOpacity={0.7}
           >
+            <View style={styles.accentBar} />
             <View style={styles.tripCardBody}>
-              <Text style={styles.tripName}>{item.name}</Text>
-              <Text style={styles.tripDates}>
-                {item.startDate} — {item.endDate}
-              </Text>
-              <Text style={styles.tripCount}>
-                {item.receiptCount} receipt{item.receiptCount !== 1 ? "s" : ""}
-              </Text>
+              <View style={styles.tripHeader}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.tripName}>{item.name}</Text>
+                  <Text style={styles.tripDates}>
+                    {item.startDate} \u2014 {item.endDate}
+                  </Text>
+                </View>
+                <View style={styles.tripAmountCol}>
+                  <Text style={styles.tripAmount}>
+                    ${(item.totalAmount || 0).toFixed(2)}
+                  </Text>
+                  <View style={styles.receiptBadge}>
+                    <Text style={styles.receiptBadgeText}>
+                      {item.receiptCount} receipt{item.receiptCount !== 1 ? "s" : ""}
+                    </Text>
+                  </View>
+                </View>
+              </View>
             </View>
-            <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
+            <Text style={styles.emptyIcon}>&#x2708;</Text>
             <Text style={styles.emptyTitle}>No trips yet</Text>
             <Text style={styles.emptySubtitle}>
-              Create a trip to group related receipts together
+              Start a new trip to begin tracking your expenses automatically with AI.
             </Text>
+            <TouchableOpacity
+              style={styles.emptyButton}
+              onPress={() => setModalVisible(true)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.emptyButtonText}>Create Trip</Text>
+            </TouchableOpacity>
           </View>
         }
       />
@@ -110,53 +148,77 @@ export function TripsScreen({ navigation }: { navigation: any }) {
       <TouchableOpacity
         style={styles.fab}
         onPress={() => setModalVisible(true)}
+        activeOpacity={0.8}
       >
-        <Text style={styles.fabText}>+</Text>
+        <Text style={styles.fabIcon}>+</Text>
       </TouchableOpacity>
 
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>New Trip</Text>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Create New Trip</Text>
 
-            <Text style={styles.fieldLabel}>Trip Name</Text>
-            <TextInput
-              style={styles.input}
-              value={newName}
-              onChangeText={setNewName}
-              placeholder="e.g. JFK→LHR June"
-              placeholderTextColor="#D1D5DB"
-            />
-
-            <Text style={styles.fieldLabel}>Start Date</Text>
-            <TextInput
-              style={styles.input}
-              value={newStart}
-              onChangeText={setNewStart}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#D1D5DB"
-            />
-
-            <Text style={styles.fieldLabel}>End Date</Text>
-            <TextInput
-              style={styles.input}
-              value={newEnd}
-              onChangeText={setNewEnd}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor="#D1D5DB"
-            />
-
-            <View style={styles.modalActions}>
-              <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={() => setModalVisible(false)}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.createButton} onPress={handleCreate}>
-                <Text style={styles.createButtonText}>Create</Text>
-              </TouchableOpacity>
+            <View style={styles.modalField}>
+              <Text style={styles.fieldLabel}>Trip Name</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={newName}
+                onChangeText={setNewName}
+                placeholder="e.g. JFK\u2192LHR June"
+                placeholderTextColor={colors.textTertiary}
+              />
             </View>
+
+            <View style={styles.modalFieldRow}>
+              <View style={[styles.modalField, { flex: 1 }]}>
+                <Text style={styles.fieldLabel}>Start Date</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={newStart}
+                  onChangeText={setNewStart}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={colors.textTertiary}
+                />
+              </View>
+              <View style={[styles.modalField, { flex: 1 }]}>
+                <Text style={styles.fieldLabel}>End Date</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={newEnd}
+                  onChangeText={setNewEnd}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={colors.textTertiary}
+                />
+              </View>
+            </View>
+
+            <View style={styles.modalField}>
+              <Text style={styles.fieldLabel}>Notes (Optional)</Text>
+              <TextInput
+                style={styles.modalInput}
+                value={newNotes}
+                onChangeText={setNewNotes}
+                placeholder="Project code or client name..."
+                placeholderTextColor={colors.textTertiary}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={styles.createButton}
+              onPress={handleCreate}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.createButtonText}>Create Trip</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.modalCancelButton}
+              onPress={() => setModalVisible(false)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -167,61 +229,113 @@ export function TripsScreen({ navigation }: { navigation: any }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F9FAFB",
+    backgroundColor: colors.background,
+  },
+  header: {
+    padding: spacing.lg,
+    paddingBottom: spacing.md,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+  },
+  title: {
+    ...typography.displaySm,
+    color: colors.textPrimary,
+  },
+  subtitle: {
+    ...typography.bodySm,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  list: {
+    paddingVertical: spacing.sm,
+    paddingBottom: 80,
   },
   tripCard: {
     flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#FFFFFF",
-    marginHorizontal: 16,
-    marginVertical: 4,
-    padding: 16,
-    borderRadius: 12,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 3,
-    elevation: 1,
+    backgroundColor: colors.surface,
+    marginHorizontal: spacing.lg,
+    marginVertical: 6,
+    borderRadius: radii.lg,
+    overflow: "hidden",
+    shadowColor: colors.shadow,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+    elevation: 2,
+  },
+  accentBar: {
+    width: 3,
+    backgroundColor: colors.primary,
   },
   tripCardBody: {
     flex: 1,
+    padding: spacing.lg,
+  },
+  tripHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   tripName: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#111827",
-    marginBottom: 4,
+    ...typography.headlineLg,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
   },
   tripDates: {
-    fontSize: 13,
-    color: "#6B7280",
-    marginBottom: 2,
+    ...typography.bodySm,
+    color: colors.textSecondary,
   },
-  tripCount: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    fontWeight: "500",
+  tripAmountCol: {
+    alignItems: "flex-end",
   },
-  chevron: {
-    fontSize: 24,
-    color: "#D1D5DB",
-    fontWeight: "300",
+  tripAmount: {
+    ...typography.displaySm,
+    color: colors.primary,
+  },
+  receiptBadge: {
+    backgroundColor: colors.primaryDim,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radii.full,
+    marginTop: spacing.xs,
+  },
+  receiptBadgeText: {
+    ...typography.labelSm,
+    color: colors.primary,
+    textTransform: "uppercase",
   },
   empty: {
     alignItems: "center",
-    paddingTop: 80,
-    paddingHorizontal: 32,
+    paddingTop: 100,
+    paddingHorizontal: spacing.xxl,
+  },
+  emptyIcon: {
+    fontSize: 48,
+    marginBottom: spacing.lg,
+    color: colors.textTertiary,
   },
   emptyTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#374151",
-    marginBottom: 8,
+    ...typography.headlineLg,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
   },
   emptySubtitle: {
-    fontSize: 14,
-    color: "#9CA3AF",
+    ...typography.bodyMd,
+    color: colors.textTertiary,
     textAlign: "center",
+    marginBottom: spacing.xl,
+  },
+  emptyButton: {
+    borderWidth: 2,
+    borderColor: colors.primary,
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.md,
+    borderRadius: radii.full,
+  },
+  emptyButtonText: {
+    ...typography.labelMd,
+    color: colors.primary,
+    fontWeight: "700",
   },
   fab: {
     position: "absolute",
@@ -229,20 +343,20 @@ const styles = StyleSheet.create({
     right: 24,
     width: 56,
     height: 56,
-    borderRadius: 28,
-    backgroundColor: "#111827",
+    borderRadius: radii.full,
+    backgroundColor: colors.primary,
     justifyContent: "center",
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.35,
     shadowRadius: 8,
     elevation: 6,
   },
-  fabText: {
-    color: "#FFFFFF",
+  fabIcon: {
     fontSize: 28,
     fontWeight: "400",
+    color: colors.onPrimary,
     marginTop: -2,
   },
   modalOverlay: {
@@ -251,64 +365,73 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   modalContent: {
-    backgroundColor: "#FFFFFF",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 24,
-    paddingBottom: 40,
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radii.xl + 12,
+    borderTopRightRadius: radii.xl + 12,
+    padding: spacing.xl,
+    paddingBottom: spacing.xxxl,
+  },
+  modalHandle: {
+    width: 48,
+    height: 4,
+    backgroundColor: colors.border,
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: spacing.xl,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#111827",
-    marginBottom: 20,
+    ...typography.displaySm,
+    color: colors.textPrimary,
+    marginBottom: spacing.xl,
+  },
+  modalField: {
+    marginBottom: spacing.lg,
+  },
+  modalFieldRow: {
+    flexDirection: "row",
+    gap: spacing.md,
   },
   fieldLabel: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#6B7280",
+    fontSize: 10,
+    fontWeight: "700",
+    color: colors.primary,
     textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 6,
-    marginTop: 12,
+    letterSpacing: 1.5,
+    marginBottom: spacing.xs,
   },
-  input: {
-    backgroundColor: "#F9FAFB",
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    fontSize: 15,
-    color: "#111827",
-    borderWidth: 1,
-    borderColor: "#E5E7EB",
-  },
-  modalActions: {
-    flexDirection: "row",
-    gap: 12,
-    marginTop: 24,
-  },
-  cancelButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: "#F3F4F6",
-    alignItems: "center",
-  },
-  cancelButtonText: {
-    color: "#6B7280",
-    fontSize: 16,
-    fontWeight: "600",
+  modalInput: {
+    ...typography.headlineMd,
+    color: colors.textPrimary,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.border,
+    paddingBottom: spacing.sm,
+    paddingHorizontal: 2,
   },
   createButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    backgroundColor: "#111827",
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.lg,
+    borderRadius: radii.lg,
     alignItems: "center",
+    marginTop: spacing.lg,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
   },
   createButtonText: {
-    color: "#FFFFFF",
+    ...typography.labelMd,
+    color: colors.onPrimary,
+    fontWeight: "700",
     fontSize: 16,
-    fontWeight: "600",
+  },
+  modalCancelButton: {
+    paddingVertical: spacing.md,
+    alignItems: "center",
+    marginTop: spacing.sm,
+  },
+  modalCancelText: {
+    ...typography.bodyMd,
+    color: colors.textSecondary,
   },
 });

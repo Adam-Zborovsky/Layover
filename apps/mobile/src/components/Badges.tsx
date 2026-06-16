@@ -1,42 +1,36 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import { colors, typography, spacing, radii, categoryColors, statusColors } from "../ui/theme";
 
-const CATEGORY_COLORS: Record<string, string> = {
-  Food: "#FF6B35",
-  CarService: "#1E90FF",
-  Lodging: "#8B5CF6",
-  Airfare: "#06B6D4",
-  Parking: "#F59E0B",
-  Tolls: "#10B981",
-  Supplies: "#EC4899",
-  Other: "#6B7280",
-};
-
-interface Props {
+interface CategoryChipProps {
   category: string;
   selected?: boolean;
   onPress?: () => void;
   size?: "sm" | "md";
 }
 
-export function CategoryChip({ category, selected, onPress, size = "md" }: Props) {
-  const color = CATEGORY_COLORS[category] || CATEGORY_COLORS.Other;
+export function CategoryChip({ category, selected, onPress, size = "md" }: CategoryChipProps) {
+  const color = categoryColors[category] || categoryColors.Other;
   const isSmall = size === "sm";
 
   return (
     <TouchableOpacity
       onPress={onPress}
       disabled={!onPress}
+      activeOpacity={0.7}
       style={[
         styles.chip,
-        { backgroundColor: selected ? color : `${color}18`, borderColor: color },
+        {
+          backgroundColor: selected ? color : `${color}14`,
+          borderColor: selected ? color : `${color}30`,
+        },
         isSmall && styles.chipSm,
       ]}
     >
       <Text
         style={[
           styles.chipText,
-          { color: selected ? "#FFFFFF" : color },
+          { color: selected ? colors.onPrimary : color },
           isSmall && styles.chipTextSm,
         ]}
       >
@@ -46,26 +40,19 @@ export function CategoryChip({ category, selected, onPress, size = "md" }: Props
   );
 }
 
-const STATUS_COLORS: Record<string, string> = {
-  PROCESSING: "#F59E0B",
-  NEEDS_REVIEW: "#EF4444",
-  CONFIRMED: "#10B981",
-  FAILED: "#6B7280",
-};
-
 interface StatusBadgeProps {
   status: string;
 }
 
 export function StatusBadge({ status }: StatusBadgeProps) {
-  const color = STATUS_COLORS[status] || STATUS_COLORS.FAILED;
+  const color = statusColors[status] || statusColors.FAILED;
   const label =
     status === "NEEDS_REVIEW"
       ? "Needs Review"
       : status.charAt(0) + status.slice(1).toLowerCase();
 
   return (
-    <View style={[styles.statusBadge, { backgroundColor: `${color}18`, borderColor: color }]}>
+    <View style={[styles.statusBadge, { backgroundColor: `${color}14`, borderColor: color }]}>
       <View style={[styles.statusDot, { backgroundColor: color }]} />
       <Text style={[styles.statusText, { color }]}>{label}</Text>
     </View>
@@ -74,7 +61,11 @@ export function StatusBadge({ status }: StatusBadgeProps) {
 
 export function ConfidenceIndicator({ confidence }: { confidence: number }) {
   const color =
-    confidence >= 0.8 ? "#10B981" : confidence >= 0.6 ? "#F59E0B" : "#EF4444";
+    confidence >= 0.8
+      ? colors.statusConfirmed
+      : confidence >= 0.6
+        ? colors.statusProcessing
+        : colors.statusReview;
   const pct = Math.round(confidence * 100);
 
   return (
@@ -83,7 +74,7 @@ export function ConfidenceIndicator({ confidence }: { confidence: number }) {
         <View
           style={[
             styles.confidenceFill,
-            { width: `${pct}%`, backgroundColor: color },
+            { width: `${pct}%` as any, backgroundColor: color },
           ]}
         />
       </View>
@@ -94,20 +85,21 @@ export function ConfidenceIndicator({ confidence }: { confidence: number }) {
 
 const styles = StyleSheet.create({
   chip: {
-    paddingHorizontal: 12,
+    paddingHorizontal: spacing.md,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: radii.full,
     borderWidth: 1,
-    marginRight: 8,
-    marginBottom: 4,
+    marginRight: spacing.sm,
+    marginBottom: spacing.xs,
   },
   chipSm: {
-    paddingHorizontal: 8,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 3,
-    borderRadius: 12,
-    marginRight: 4,
+    borderRadius: radii.md,
+    marginRight: spacing.xs,
   },
   chipText: {
+    ...typography.labelSm,
     fontSize: 13,
     fontWeight: "600",
   },
@@ -117,9 +109,9 @@ const styles = StyleSheet.create({
   statusBadge: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 10,
+    paddingHorizontal: spacing.md,
     paddingVertical: 4,
-    borderRadius: 12,
+    borderRadius: radii.full,
     borderWidth: 1,
     alignSelf: "flex-start",
   },
@@ -130,8 +122,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   statusText: {
-    fontSize: 12,
-    fontWeight: "600",
+    ...typography.labelSm,
   },
   confidence: {
     flexDirection: "row",

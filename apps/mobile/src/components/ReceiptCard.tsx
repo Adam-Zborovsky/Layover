@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
 import { CategoryChip, StatusBadge } from "./Badges";
 import { getReceiptThumbnailUrl } from "../api/client";
+import { colors, typography, spacing, radii } from "../ui/theme";
 
 interface ReceiptCardProps {
   id: string;
@@ -14,6 +15,17 @@ interface ReceiptCardProps {
   thumbnailPath: string;
   onPress: (id: string) => void;
 }
+
+const CATEGORY_ACCENT_COLORS: Record<string, string> = {
+  Food: colors.categoryFood,
+  CarService: colors.categoryCarService,
+  Lodging: colors.categoryLodging,
+  Airfare: colors.categoryAirfare,
+  Parking: colors.categoryParking,
+  Tolls: colors.categoryTolls,
+  Supplies: colors.categorySupplies,
+  Other: colors.categoryOther,
+};
 
 export function ReceiptCard({
   id,
@@ -32,16 +44,22 @@ export function ReceiptCard({
     getReceiptThumbnailUrl(id).then(setThumbUrl).catch(() => {});
   }, [id]);
 
-  const date =
-    capturedAt
-      ? new Date(capturedAt).toLocaleDateString("en-US", {
-          month: "short",
-          day: "numeric",
-        })
-      : "";
+  const date = capturedAt
+    ? new Date(capturedAt).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+      })
+    : "";
+
+  const accentColor = CATEGORY_ACCENT_COLORS[category] || colors.categoryOther;
 
   return (
-    <TouchableOpacity style={styles.card} onPress={() => onPress(id)} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => onPress(id)}
+      activeOpacity={0.7}
+    >
+      <View style={[styles.accentBar, { backgroundColor: accentColor }]} />
       {thumbUrl ? (
         <Image source={{ uri: thumbUrl }} style={styles.thumb} />
       ) : (
@@ -73,35 +91,41 @@ export function ReceiptCard({
 const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    marginHorizontal: 16,
+    backgroundColor: colors.surface,
+    borderRadius: radii.lg,
+    marginHorizontal: spacing.lg,
     marginVertical: 6,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: colors.shadowStrong,
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 1,
     shadowRadius: 4,
     elevation: 2,
   },
+  accentBar: {
+    width: 3,
+  },
   thumb: {
-    width: 80,
-    height: 80,
-    backgroundColor: "#F3F4F6",
+    width: 76,
+    height: 76,
+    borderRadius: radii.md,
+    margin: spacing.md,
+    backgroundColor: colors.borderLight,
   },
   thumbPlaceholder: {
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F3F4F6",
+    backgroundColor: colors.borderLight,
   },
   thumbPlaceholderText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#9CA3AF",
+    color: colors.textTertiary,
   },
   cardBody: {
     flex: 1,
-    padding: 12,
+    paddingVertical: spacing.md,
+    paddingRight: spacing.md,
     justifyContent: "space-between",
   },
   cardHeader: {
@@ -110,30 +134,28 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   merchant: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#111827",
+    ...typography.headlineMd,
+    color: colors.textPrimary,
     flex: 1,
-    marginRight: 8,
+    marginRight: spacing.sm,
   },
   amount: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#111827",
+    ...typography.amount,
+    color: colors.textPrimary,
   },
   cardFooter: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: 4,
+    marginTop: spacing.xs,
   },
   cardMeta: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: spacing.sm,
   },
   date: {
-    fontSize: 12,
-    color: "#6B7280",
+    ...typography.bodySm,
+    color: colors.textSecondary,
   },
 });
