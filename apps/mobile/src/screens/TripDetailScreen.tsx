@@ -52,6 +52,16 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
     }
   }
 
+  const sortedReceipts = useMemo(() => {
+    const receipts = trip?.receipts || [];
+    return [...receipts].sort((a: ReceiptListItem, b: ReceiptListItem) => {
+      if (sortBy === "amount") {
+        return (Number(b.total) || 0) - (Number(a.total) || 0);
+      }
+      return new Date(b.capturedAt || 0).getTime() - new Date(a.capturedAt || 0).getTime();
+    });
+  }, [trip?.receipts, sortBy]);
+
   if (loading) {
     return (
       <View style={styles.centered}>
@@ -88,16 +98,6 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
       </View>
     );
   }
-
-  const sortedReceipts = useMemo(() => {
-    const receipts = trip.receipts || [];
-    return [...receipts].sort((a: ReceiptListItem, b: ReceiptListItem) => {
-      if (sortBy === "amount") {
-        return (Number(b.total) || 0) - (Number(a.total) || 0);
-      }
-      return new Date(b.capturedAt || 0).getTime() - new Date(a.capturedAt || 0).getTime();
-    });
-  }, [trip.receipts, sortBy]);
 
   const grandTotal = trip.totals?._grandTotal || 0;
   const currency = trip.receipts?.[0]?.currency || "USD";

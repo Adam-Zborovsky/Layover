@@ -101,6 +101,6 @@ export const geminiExtractionSchema = z.object({
 export const settingsSchema = z.object({
   namingTemplate: z.string().default("YYYY-MM-DD_Merchant_Category_$Total"),
   defaultCurrency: z.string().length(3).default("USD"),
-  escalationThreshold: z.number().min(0).max(1).default(0.6),
+  escalationThreshold: z.coerce.number().min(0).max(1).default(0.6),
   categories: z.array(z.string()).optional(),
 });
