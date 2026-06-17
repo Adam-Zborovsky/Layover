@@ -126,7 +126,17 @@ export async function apiRequest<T = unknown>(
     return response.json() as Promise<T>;
   }
 
-  return response.text() as Promise<T>;
+  // A 200 that isn't JSON means we hit something other than the API (e.g. a
+  // proxy/landing page). Returning the raw text here would let callers treat a
+  // string like "Receipt Tracker API" as their typed payload and crash on
+  // `.map`/`.filter`. Surface it as an error instead.
+  const body = await response.text();
+  throw new ApiError(
+    response.status,
+    `Expected JSON from ${path} but got "${contentType ?? "unknown"}": ${body.slice(0, 200)}`,
+    false,
+    false
+  );
 }
 
 export async function uploadReceipt(

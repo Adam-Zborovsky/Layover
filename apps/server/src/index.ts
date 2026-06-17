@@ -18,10 +18,10 @@ app.addHook("onRequest", async (request, reply) => {
 });
 
 await app.register(healthRoutes);
-await app.register(receiptRoutes);
-await app.register(tripRoutes);
-await app.register(exportRoutes);
-await app.register(settingsRoutes);
+await app.register(receiptRoutes, { prefix: "/api" });
+await app.register(tripRoutes, { prefix: "/api" });
+await app.register(exportRoutes, { prefix: "/api" });
+await app.register(settingsRoutes, { prefix: "/api" });
 
 try {
   await app.listen({ port: config.port, host: config.host });

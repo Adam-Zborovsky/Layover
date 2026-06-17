@@ -64,14 +64,14 @@ export function ExportScreen() {
   async function loadTrips() {
     try {
       const data = (await fetchTrips()) as TripItem[];
-      setTrips(data);
+      setTrips(Array.isArray(data) ? data : []);
     } catch {}
   }
 
   async function loadExportLog() {
     try {
       const data = (await fetchExportLog()) as ExportResult[];
-      setExportLog(data);
+      setExportLog(Array.isArray(data) ? data : []);
     } catch {}
   }
 

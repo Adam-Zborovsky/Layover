@@ -40,7 +40,7 @@ export function TripsScreen({ navigation }: { navigation: any }) {
     try {
       setError(null);
       const data = (await fetchTrips()) as TripItem[];
-      setTrips(data);
+      setTrips(Array.isArray(data) ? data : []);
     } catch (err: any) {
       setError(err.message || "Failed to load trips");
     } finally {
