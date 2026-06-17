@@ -63,7 +63,7 @@ export const exportRequestSchema = z.object({
 
 export const receiptListQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
-  pageSize: z.coerce.number().int().min(1).max(100).default(50),
+  pageSize: z.coerce.number().int().min(1).max(500).default(50),
   category: receiptCategorySchema.optional(),
   status: receiptStatusSchema.optional(),
   tripId: z.string().uuid().optional(),
