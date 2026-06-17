@@ -27,6 +27,7 @@ export function CategoryChip({ category, selected, onPress, size = "md" }: Categ
         isSmall && styles.chipSm,
       ]}
     >
+      <View style={[styles.chipDot, { backgroundColor: color }]} />
       <Text
         style={[
           styles.chipText,
@@ -52,8 +53,12 @@ export function StatusBadge({ status }: StatusBadgeProps) {
       : status.charAt(0) + status.slice(1).toLowerCase();
 
   return (
-    <View style={[styles.statusBadge, { backgroundColor: `${color}14`, borderColor: color }]}>
-      <View style={[styles.statusDot, { backgroundColor: color }]} />
+    <View
+      style={[styles.statusBadge, { backgroundColor: `${color}14`, borderColor: color }]}
+      accessibilityLabel={`${label} status`}
+      accessibilityRole="text"
+    >
+      <View style={[styles.statusDot, { backgroundColor: color }]} importantForAccessibility="no" />
       <Text style={[styles.statusText, { color }]}>{label}</Text>
     </View>
   );
@@ -85,12 +90,20 @@ export function ConfidenceIndicator({ confidence }: { confidence: number }) {
 
 const styles = StyleSheet.create({
   chip: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: spacing.md,
     paddingVertical: 6,
     borderRadius: radii.full,
     borderWidth: 1,
     marginRight: spacing.sm,
     marginBottom: spacing.xs,
+  },
+  chipDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 5,
   },
   chipSm: {
     paddingHorizontal: spacing.sm,

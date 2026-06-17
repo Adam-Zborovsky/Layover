@@ -8,6 +8,8 @@ import {
   TextInput,
   Alert,
   Modal,
+  RefreshControl,
+  ActivityIndicator,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { fetchTrips, createTrip, deleteTrip } from "../api/client";
@@ -25,6 +27,9 @@ interface TripItem {
 
 export function TripsScreen({ navigation }: { navigation: any }) {
   const [trips, setTrips] = useState<TripItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [newName, setNewName] = useState("");
   const [newStart, setNewStart] = useState("");
@@ -33,12 +38,26 @@ export function TripsScreen({ navigation }: { navigation: any }) {
 
   const load = useCallback(async () => {
     try {
+      setError(null);
       const data = (await fetchTrips()) as TripItem[];
       setTrips(data);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setError(err.message || "Failed to load trips");
+    } finally {
+      setIsLoading(false);
+      setRefreshing(false);
     }
   }, []);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await load();
+  }, [load]);
+
+  const retry = () => {
+    setIsLoading(true);
+    load();
+  };
 
   useFocusEffect(
     useCallback(() => {
@@ -94,9 +113,17 @@ export function TripsScreen({ navigation }: { navigation: any }) {
       </View>
 
       <FlatList
-        data={trips}
+        data={trips || []}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
         renderItem={({ item }) => (
           <TouchableOpacity
             style={styles.tripCard}
@@ -119,7 +146,7 @@ export function TripsScreen({ navigation }: { navigation: any }) {
                   </Text>
                   <View style={styles.receiptBadge}>
                     <Text style={styles.receiptBadgeText}>
-                      {item.receiptCount} receipt{item.receiptCount !== 1 ? "s" : ""}
+                      {item.receiptCount || 0} receipt{(item.receiptCount || 0) !== 1 ? "s" : ""}
                     </Text>
                   </View>
                 </View>
@@ -128,20 +155,39 @@ export function TripsScreen({ navigation }: { navigation: any }) {
           </TouchableOpacity>
         )}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>&#x2708;</Text>
-            <Text style={styles.emptyTitle}>No trips yet</Text>
-            <Text style={styles.emptySubtitle}>
-              Start a new trip to begin tracking your expenses automatically with AI.
-            </Text>
-            <TouchableOpacity
-              style={styles.emptyButton}
-              onPress={() => setModalVisible(true)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.emptyButtonText}>Create Trip</Text>
-            </TouchableOpacity>
-          </View>
+          isLoading ? (
+            <View style={styles.centered}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          ) : error ? (
+            <View style={styles.empty}>
+              <Text style={styles.emptyIcon}>&#x26A0;</Text>
+              <Text style={styles.emptyTitle}>Something went wrong</Text>
+              <Text style={styles.emptySubtitle}>{error}</Text>
+              <TouchableOpacity
+                style={styles.emptyButton}
+                onPress={retry}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.emptyButtonText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.empty}>
+              <Text style={styles.emptyIcon}>&#x2708;</Text>
+              <Text style={styles.emptyTitle}>No trips yet</Text>
+              <Text style={styles.emptySubtitle}>
+                Start a new trip to begin tracking your expenses automatically with AI.
+              </Text>
+              <TouchableOpacity
+                style={styles.emptyButton}
+                onPress={() => setModalVisible(true)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.emptyButtonText}>Create Trip</Text>
+              </TouchableOpacity>
+            </View>
+          )
         }
       />
 
@@ -433,5 +479,9 @@ const styles = StyleSheet.create({
   modalCancelText: {
     ...typography.bodyMd,
     color: colors.textSecondary,
+  },
+  centered: {
+    alignItems: "center",
+    paddingTop: 120,
   },
 });

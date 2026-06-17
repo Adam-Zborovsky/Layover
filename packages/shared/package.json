@@ -12,9 +12,9 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "node -e \"require('fs').rmSync('tsconfig.tsbuildinfo',{force:true})\" && tsc",
     "dev": "tsc --watch",
-    "prepare": "tsc"
+    "prepare": "npm run build"
   },
   "dependencies": {
     "zod": "^3.23.0"

@@ -1,7 +1,15 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  type ImageSourcePropType,
+} from "react-native";
 import { CategoryChip, StatusBadge } from "./Badges";
 import { getReceiptThumbnailUrl } from "../api/client";
+import { getAuthToken } from "../api/auth";
 import { colors, typography, spacing, radii } from "../ui/theme";
 
 interface ReceiptCardProps {
@@ -38,10 +46,20 @@ export function ReceiptCard({
   thumbnailPath,
   onPress,
 }: ReceiptCardProps) {
-  const [thumbUrl, setThumbUrl] = React.useState<string>("");
+  const [thumbSource, setThumbSource] = React.useState<ImageSourcePropType | null>(null);
 
   React.useEffect(() => {
-    getReceiptThumbnailUrl(id).then(setThumbUrl).catch(() => {});
+    async function loadThumb() {
+      const [url, token] = await Promise.all([
+        getReceiptThumbnailUrl(id),
+        getAuthToken(),
+      ]);
+      setThumbSource({
+        uri: url,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+    }
+    loadThumb().catch(() => {});
   }, [id]);
 
   const date = capturedAt
@@ -58,10 +76,15 @@ export function ReceiptCard({
       style={styles.card}
       onPress={() => onPress(id)}
       activeOpacity={0.7}
+      accessibilityLabel={`${merchant || "Unknown"}, ${currency} ${(typeof total === 'number' ? total : 0).toFixed(2)}, ${category}, ${status}`}
+      accessibilityRole="button"
     >
-      <View style={[styles.accentBar, { backgroundColor: accentColor }]} />
-      {thumbUrl ? (
-        <Image source={{ uri: thumbUrl }} style={styles.thumb} />
+      <View
+        style={[styles.accentBar, { backgroundColor: accentColor }]}
+        importantForAccessibility="no"
+      />
+      {thumbSource ? (
+        <Image source={thumbSource} style={styles.thumb} />
       ) : (
         <View style={[styles.thumb, styles.thumbPlaceholder]}>
           <Text style={styles.thumbPlaceholderText}>REC</Text>
@@ -73,7 +96,7 @@ export function ReceiptCard({
             {merchant || "Processing..."}
           </Text>
           <Text style={styles.amount}>
-            {currency} {total.toFixed(2)}
+            {currency} {(typeof total === 'number' ? total : 0).toFixed(2)}
           </Text>
         </View>
         <View style={styles.cardFooter}>
@@ -84,6 +107,7 @@ export function ReceiptCard({
           <StatusBadge status={status} />
         </View>
       </View>
+      <Text style={styles.chevron} importantForAccessibility="no">›</Text>
     </TouchableOpacity>
   );
 }
@@ -92,7 +116,7 @@ const styles = StyleSheet.create({
   card: {
     flexDirection: "row",
     backgroundColor: colors.surface,
-    borderRadius: radii.lg,
+    borderRadius: radii.md,
     marginHorizontal: spacing.lg,
     marginVertical: 6,
     overflow: "hidden",
@@ -157,5 +181,12 @@ const styles = StyleSheet.create({
   date: {
     ...typography.bodySm,
     color: colors.textSecondary,
+  },
+  chevron: {
+    fontSize: 22,
+    color: colors.textTertiary,
+    marginRight: spacing.md,
+    alignSelf: "center",
+    fontWeight: "300",
   },
 });

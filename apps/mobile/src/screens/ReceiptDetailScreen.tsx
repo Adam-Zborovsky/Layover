@@ -9,6 +9,9 @@ import {
   Alert,
   Image,
   ActivityIndicator,
+  Platform,
+  KeyboardAvoidingView,
+  type ImageSourcePropType,
 } from "react-native";
 import {
   fetchReceipt,
@@ -18,6 +21,7 @@ import {
   getReceiptImageUrl,
   fetchTrips,
 } from "../api/client";
+import { getAuthToken } from "../api/auth";
 import { ConfidenceIndicator, StatusBadge, CategoryChip } from "../components/Badges";
 import { RECEIPT_CATEGORIES, type Receipt } from "@recipts/shared";
 import { colors, typography, spacing, radii, categoryColors } from "../ui/theme";
@@ -26,8 +30,10 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
   const { id } = route.params;
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageSource, setImageSource] = useState<ImageSourcePropType | null>(null);
   const [trips, setTrips] = useState<{ id: string; name: string }[]>([]);
   const [edited, setEdited] = useState<Record<string, any>>({});
   const [lineItemsExpanded, setLineItemsExpanded] = useState(false);
@@ -39,18 +45,29 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
 
   async function loadReceipt() {
     try {
+      setError(null);
       const data = (await fetchReceipt(id)) as Receipt;
       setReceipt(data);
       setEdited({});
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setError(err.message || "Failed to load receipt");
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    getReceiptImageUrl(id).then(setImageUrl);
+    async function loadImage() {
+      const [url, token] = await Promise.all([
+        getReceiptImageUrl(id),
+        getAuthToken(),
+      ]);
+      setImageSource({
+        uri: url,
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+    }
+    loadImage();
   }, [id]);
 
   async function loadTrips() {
@@ -66,12 +83,16 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
 
   async function saveChanges() {
     if (!receipt) return;
+    setIsSaving(true);
     try {
-      await updateReceipt(id, edited);
+      const total = (display.subtotal || 0) + (display.tax || 0) + (display.tip || 0);
+      await updateReceipt(id, { ...edited, total });
       setEditing(false);
       loadReceipt();
     } catch (err: any) {
       Alert.alert("Error", err.message || "Failed to save");
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -117,6 +138,29 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
     );
   }
 
+  if (error) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorIcon}>&#x26A0;</Text>
+        <Text style={styles.errorTitle}>Something went wrong</Text>
+        <Text style={styles.errorMessage}>{error}</Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={() => {
+            setLoading(true);
+            setError(null);
+            loadReceipt();
+          }}
+          activeOpacity={0.7}
+          accessibilityLabel="Retry loading receipt"
+          accessibilityRole="button"
+        >
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   if (!receipt) {
     return (
       <View style={styles.centered}>
@@ -135,10 +179,24 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
         : colors.statusReview;
 
   return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {imageUrl ? (
+      {imageSource ? (
         <View style={styles.imageWrapper}>
-          <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="contain" />
+          <ScrollView
+            style={styles.zoomContainer}
+            contentContainerStyle={styles.zoomContent}
+            maximumZoomScale={3}
+            minimumZoomScale={1}
+            bouncesZoom={false}
+            showsHorizontalScrollIndicator={false}
+            showsVerticalScrollIndicator={false}
+          >
+            <Image source={imageSource} style={styles.image} resizeMode="contain" />
+          </ScrollView>
           <View style={styles.imageOverlay}>
             <View style={styles.confidencePill}>
               <View style={[styles.confidenceDot, { backgroundColor: confidenceColor }]} />
@@ -164,6 +222,7 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
             editable={editing}
             placeholder="Merchant name"
             placeholderTextColor={colors.textTertiary}
+            accessibilityLabel="Merchant name"
           />
         </View>
 
@@ -177,9 +236,10 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
               editable={editing}
               placeholder="City"
               placeholderTextColor={colors.textTertiary}
+              accessibilityLabel="Location city"
             />
           </View>
-          <View style={[styles.field, { flex: 1 }]}>
+          <View style={[styles.field, styles.confidenceBorder, { flex: 1 }]}>
             <Text style={styles.fieldLabel}>Date</Text>
             <TextInput
               style={styles.underlineInput}
@@ -197,13 +257,29 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
         <View style={styles.amountRow}>
           <View style={[styles.field, styles.confidenceBorder, { flex: 1 }]}>
             <Text style={styles.fieldLabel}>Subtotal</Text>
-            <Text style={styles.amountValue}>${(display.subtotal || 0).toFixed(2)}</Text>
+            <TextInput
+              style={[styles.underlineInput, { color: colors.primary }]}
+              value={display.subtotal?.toString()}
+              onChangeText={(v) => updateField("subtotal", parseFloat(v) || 0)}
+              editable={editing}
+              keyboardType="decimal-pad"
+              placeholder="$0.00"
+              placeholderTextColor={colors.textTertiary}
+            />
           </View>
           <View style={[styles.field, styles.confidenceBorder, { flex: 1 }]}>
             <Text style={styles.fieldLabel}>Tax</Text>
-            <Text style={styles.amountValue}>${(display.tax || 0).toFixed(2)}</Text>
+            <TextInput
+              style={[styles.underlineInput, { color: colors.primary }]}
+              value={display.tax?.toString()}
+              onChangeText={(v) => updateField("tax", parseFloat(v) || 0)}
+              editable={editing}
+              keyboardType="decimal-pad"
+              placeholder="$0.00"
+              placeholderTextColor={colors.textTertiary}
+            />
           </View>
-          <View style={[styles.field, { flex: 1 }]}>
+          <View style={[styles.field, styles.confidenceBorder, { flex: 1 }]}>
             <Text style={styles.fieldLabel}>Tip</Text>
             <TextInput
               style={[styles.underlineInput, { color: colors.primary }]}
@@ -221,7 +297,7 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
           <Text style={styles.totalLabel}>Total Amount</Text>
           <View style={styles.totalValueRow}>
             <Text style={styles.totalCurrency}>{display.currency || "USD"}</Text>
-            <Text style={styles.totalValue}>${(display.total || 0).toFixed(2)}</Text>
+            <Text style={styles.totalValue}>${((display.subtotal || 0) + (display.tax || 0) + (display.tip || 0)).toFixed(2)}</Text>
           </View>
         </View>
       </View>
@@ -245,30 +321,44 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
       )}
 
       <View style={styles.card}>
-        <TouchableOpacity style={styles.infoRow}>
+        <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Payment Method</Text>
-          <Text style={styles.infoValue}>{display.paymentMethod || "—"}</Text>
-        </TouchableOpacity>
+          {editing ? (
+            <TextInput
+              style={styles.underlineInput}
+              value={display.paymentMethod || ""}
+              onChangeText={(v) => updateField("paymentMethod", v)}
+              editable={editing}
+              placeholder="Payment method"
+              placeholderTextColor={colors.textTertiary}
+            />
+          ) : (
+            <Text style={styles.infoValue}>{display.paymentMethod || "\u2014"}</Text>
+          )}
+        </View>
         <View style={styles.divider} />
-        <TouchableOpacity style={styles.infoRow}>
-          <Text style={styles.infoLabel}>Trip Assignment</Text>
-          <Text style={[styles.infoValue, !display.tripId && { color: colors.primary }]}>
-            {editing ? (
-              <View style={styles.chipRow}>
-                {trips.map((t) => (
-                  <CategoryChip
-                    key={t.id}
-                    category={t.name}
-                    selected={display.tripId === t.id}
-                    onPress={() => updateField("tripId", t.id)}
-                  />
-                ))}
-              </View>
-            ) : (
-              trips.find((t) => t.id === display.tripId)?.name || "No trip"
-            )}
-          </Text>
-        </TouchableOpacity>
+        {editing ? (
+          <View>
+            <Text style={styles.infoLabel}>Trip Assignment</Text>
+            <View style={[styles.chipRow, { paddingHorizontal: 0, marginBottom: 0 }]}>
+              {trips.map((t) => (
+                <CategoryChip
+                  key={t.id}
+                  category={t.name}
+                  selected={display.tripId === t.id}
+                  onPress={() => updateField("tripId", t.id)}
+                />
+              ))}
+            </View>
+          </View>
+        ) : (
+          <View style={styles.infoRow}>
+            <Text style={styles.infoLabel}>Trip Assignment</Text>
+            <Text style={[styles.infoValue, !display.tripId && { color: colors.primary }]}>
+              {trips.find((t) => t.id === display.tripId)?.name || "No trip"}
+            </Text>
+          </View>
+        )}
         <View style={styles.divider} />
         <View style={styles.infoRow}>
           <Text style={styles.infoLabel}>Notes</Text>
@@ -316,11 +406,16 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
         {editing ? (
           <>
             <TouchableOpacity
-              style={styles.saveButton}
+              style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
               onPress={saveChanges}
+              disabled={isSaving}
               activeOpacity={0.8}
             >
-              <Text style={styles.saveButtonText}>Save Changes</Text>
+              {isSaving ? (
+                <ActivityIndicator size="small" color={colors.onPrimary} />
+              ) : (
+                <Text style={styles.saveButtonText}>Save Changes</Text>
+              )}
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.cancelButton}
@@ -360,6 +455,7 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
         )}
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -381,8 +477,43 @@ const styles = StyleSheet.create({
     ...typography.bodyMd,
     color: colors.textSecondary,
   },
+  errorIcon: {
+    fontSize: 48,
+    marginBottom: spacing.lg,
+  },
+  errorTitle: {
+    ...typography.headlineLg,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  errorMessage: {
+    ...typography.bodyMd,
+    color: colors.textTertiary,
+    textAlign: "center",
+    paddingHorizontal: spacing.xxl,
+    marginBottom: spacing.xl,
+  },
+  retryButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.md,
+    borderRadius: radii.lg,
+  },
+  retryButtonText: {
+    ...typography.labelMd,
+    color: colors.onPrimary,
+    fontWeight: "700",
+  },
   imageWrapper: {
     position: "relative",
+  },
+  zoomContainer: {
+    width: "100%",
+    height: 340,
+    backgroundColor: colors.borderLight,
+  },
+  zoomContent: {
+    flex: 1,
   },
   image: {
     width: "100%",
@@ -612,6 +743,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 8,
     elevation: 4,
+  },
+  saveButtonDisabled: {
+    opacity: 0.6,
   },
   saveButtonText: {
     ...typography.labelMd,

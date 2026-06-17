@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -7,39 +7,69 @@ import {
   RefreshControl,
   TouchableOpacity,
   TextInput,
+  ActivityIndicator,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { ReceiptCard } from "../components/ReceiptCard";
 import { fetchReceipts } from "../api/client";
+import { getAuthToken } from "../api/auth";
+import { processQueue } from "../services/queueProcessor";
 import { colors, typography, spacing, radii } from "../ui/theme";
 import type { PaginatedResponse, ReceiptListItem } from "@recipts/shared";
 
 export function HomeScreen({ navigation }: { navigation: any }) {
   const [receipts, setReceipts] = useState<ReceiptListItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [needsSetup, setNeedsSetup] = useState(false);
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const searchRef = useRef(search);
+  searchRef.current = search;
 
   const load = useCallback(async () => {
+    const token = await getAuthToken();
+    if (!token) {
+      setNeedsSetup(true);
+      setIsLoading(false);
+      return;
+    }
+    setNeedsSetup(false);
     try {
+      setError(null);
       const params: Record<string, string | number | boolean | undefined> = {
         page: 1,
         pageSize: 100,
       };
-      if (search) params.search = search;
+      if (searchRef.current) params.search = searchRef.current;
       if (activeFilter === "needs_review") params.needsReview = true;
       else if (activeFilter) params.status = activeFilter;
 
       const data = (await fetchReceipts(params)) as PaginatedResponse<ReceiptListItem>;
       setReceipts(data.items);
-    } catch (err) {
-      console.error("Failed to load receipts:", err);
+    } catch (err: any) {
+      setError(err.message || "Failed to load receipts");
+    } finally {
+      setIsLoading(false);
     }
-  }, [search, activeFilter]);
+  }, [activeFilter]);
+
+  useEffect(() => {
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      load();
+    }, 300);
+    return () => {
+      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
+    };
+  }, [search, load]);
 
   useFocusEffect(
     useCallback(() => {
       load();
+      processQueue();
     }, [load])
   );
 
@@ -49,6 +79,11 @@ export function HomeScreen({ navigation }: { navigation: any }) {
     setRefreshing(false);
   };
 
+  const retry = () => {
+    setIsLoading(true);
+    load();
+  };
+
   const filters = [
     { key: null, label: "All" },
     { key: "needs_review", label: "Needs Review" },
@@ -56,8 +91,8 @@ export function HomeScreen({ navigation }: { navigation: any }) {
     { key: "PROCESSING", label: "Processing" },
   ];
 
-  const totalAmount = receipts.reduce((sum, r) => sum + Number(r.total || 0), 0);
-  const totalCurrency = receipts[0]?.currency || "USD";
+  const totalAmount = (receipts || []).reduce((sum, r) => sum + Number(r.total || 0), 0);
+  const totalCurrency = receipts?.[0]?.currency || "USD";
 
   return (
     <View style={styles.container}>
@@ -66,7 +101,7 @@ export function HomeScreen({ navigation }: { navigation: any }) {
           <View>
             <Text style={styles.appTitle}>Layover</Text>
             <Text style={styles.subtitle}>
-              {receipts.length} receipt{receipts.length !== 1 ? "s" : ""}
+              {(receipts || []).length} receipt{(receipts || []).length !== 1 ? "s" : ""}
               {totalAmount > 0 && `  \u00B7  ${totalCurrency} ${totalAmount.toFixed(2)}`}
             </Text>
           </View>
@@ -74,6 +109,8 @@ export function HomeScreen({ navigation }: { navigation: any }) {
             style={styles.captureFab}
             onPress={() => navigation.navigate("CaptureModal")}
             activeOpacity={0.8}
+            accessibilityLabel="Capture new receipt"
+            accessibilityRole="button"
           >
             <Text style={styles.captureFabIcon}>+</Text>
           </TouchableOpacity>
@@ -88,6 +125,7 @@ export function HomeScreen({ navigation }: { navigation: any }) {
             onChangeText={setSearch}
             onSubmitEditing={load}
             returnKeyType="search"
+            accessibilityLabel="Search receipts"
           />
         </View>
         <View style={styles.filterRow}>
@@ -102,6 +140,8 @@ export function HomeScreen({ navigation }: { navigation: any }) {
                 ]}
                 onPress={() => setActiveFilter(f.key)}
                 activeOpacity={0.7}
+                accessibilityLabel={`Filter by ${f.label}`}
+                accessibilityRole="button"
               >
                 <Text
                   style={[
@@ -118,7 +158,7 @@ export function HomeScreen({ navigation }: { navigation: any }) {
       </View>
 
       <FlatList
-        data={receipts}
+        data={receipts || []}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <ReceiptCard
@@ -143,13 +183,59 @@ export function HomeScreen({ navigation }: { navigation: any }) {
         }
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>&#x1F4F7;</Text>
-            <Text style={styles.emptyTitle}>No receipts yet</Text>
-            <Text style={styles.emptySubtitle}>
-              Capture your first receipt to start tracking expenses
-            </Text>
-          </View>
+          isLoading ? (
+            <View style={styles.centered}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+          ) : error ? (
+            <View style={styles.empty}>
+              <Text style={styles.emptyIcon}>&#x26A0;</Text>
+              <Text style={styles.emptyTitle}>Something went wrong</Text>
+              <Text style={styles.emptySubtitle}>{error}</Text>
+              <TouchableOpacity
+                style={styles.emptyButton}
+                onPress={retry}
+                activeOpacity={0.7}
+                accessibilityLabel="Retry loading receipts"
+                accessibilityRole="button"
+              >
+                <Text style={styles.emptyButtonText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          ) : needsSetup ? (
+            <View style={styles.empty}>
+              <Text style={styles.emptyIcon}>&#x2699;</Text>
+              <Text style={styles.emptyTitle}>Welcome to Layover</Text>
+              <Text style={styles.emptySubtitle}>
+                Set up your server connection in Settings to start tracking receipts.
+              </Text>
+              <TouchableOpacity
+                style={styles.emptyButton}
+                onPress={() => navigation.navigate("Settings")}
+                activeOpacity={0.7}
+                accessibilityLabel="Open Settings"
+                accessibilityRole="button"
+              >
+                <Text style={styles.emptyButtonText}>Open Settings</Text>
+              </TouchableOpacity>
+            </View>
+          ) : search ? (
+            <View style={styles.empty}>
+              <Text style={styles.emptyIcon}>&#x1F50D;</Text>
+              <Text style={styles.emptyTitle}>No results found</Text>
+              <Text style={styles.emptySubtitle}>
+                No receipts match "{search}"
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.empty}>
+              <Text style={styles.emptyIcon}>&#x1F4F7;</Text>
+              <Text style={styles.emptyTitle}>No receipts yet</Text>
+              <Text style={styles.emptySubtitle}>
+                Capture your first receipt to start tracking expenses
+              </Text>
+            </View>
+          )
         }
       />
     </View>
@@ -228,9 +314,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: 7,
     borderRadius: radii.full,
-    backgroundColor: colors.borderLight,
+    backgroundColor: "transparent",
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: colors.secondary,
   },
   filterChipActive: {
     backgroundColor: colors.primary,
@@ -265,5 +351,21 @@ const styles = StyleSheet.create({
     ...typography.bodyMd,
     color: colors.textTertiary,
     textAlign: "center",
+  },
+  emptyButton: {
+    marginTop: spacing.xl,
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.md,
+    borderRadius: radii.lg,
+  },
+  emptyButtonText: {
+    ...typography.labelMd,
+    color: colors.onPrimary,
+    fontWeight: "700",
+  },
+  centered: {
+    alignItems: "center",
+    paddingTop: 120,
   },
 });

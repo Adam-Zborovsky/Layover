@@ -1,9 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   View,
   Text,
   FlatList,
   StyleSheet,
+  Alert,
+  TouchableOpacity,
+  ActivityIndicator,
 } from "react-native";
 import { fetchTrip } from "../api/client";
 import { ReceiptCard } from "../components/ReceiptCard";
@@ -11,21 +14,39 @@ import { CategoryChip } from "../components/Badges";
 import { colors, typography, spacing, radii } from "../ui/theme";
 import type { ReceiptListItem } from "@recipts/shared";
 
+type SortBy = "date" | "amount";
+
 export function TripDetailScreen({ route, navigation }: { route: any; navigation: any }) {
   const { id } = route.params;
   const [trip, setTrip] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<SortBy>("date");
 
   useEffect(() => {
     loadTrip();
   }, [id]);
 
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <TouchableOpacity
+          onPress={() => Alert.alert("Edit Trip", "Edit trip coming soon")}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.editButton}>Edit</Text>
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation]);
+
   async function loadTrip() {
     try {
+      setError(null);
       const data = await fetchTrip(id);
       setTrip(data);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      setError(err.message || "Failed to load trip");
     } finally {
       setLoading(false);
     }
@@ -34,7 +55,28 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
   if (loading) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.loadingText}>Loading...</Text>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.centered}>
+        <Text style={styles.errorIcon}>&#x26A0;</Text>
+        <Text style={styles.errorTitle}>Something went wrong</Text>
+        <Text style={styles.errorMessage}>{error}</Text>
+        <TouchableOpacity
+          style={styles.retryButton}
+          onPress={() => {
+            setLoading(true);
+            setError(null);
+            loadTrip();
+          }}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.retryButtonText}>Retry</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -46,6 +88,16 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
       </View>
     );
   }
+
+  const sortedReceipts = useMemo(() => {
+    const receipts = trip.receipts || [];
+    return [...receipts].sort((a: ReceiptListItem, b: ReceiptListItem) => {
+      if (sortBy === "amount") {
+        return (Number(b.total) || 0) - (Number(a.total) || 0);
+      }
+      return new Date(b.capturedAt || 0).getTime() - new Date(a.capturedAt || 0).getTime();
+    });
+  }, [trip.receipts, sortBy]);
 
   const grandTotal = trip.totals?._grandTotal || 0;
   const currency = trip.receipts?.[0]?.currency || "USD";
@@ -68,7 +120,7 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
         </View>
         <View style={styles.statsRow}>
           <View style={styles.statBox}>
-            <Text style={styles.statValue}>{trip.receiptCount}</Text>
+            <Text style={styles.statValue}>{trip.receiptCount || 0}</Text>
             <Text style={styles.statLabel}>Receipts</Text>
           </View>
           <View style={styles.statBox}>
@@ -88,7 +140,7 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
               <View key={c.category} style={styles.categoryStat}>
                 <CategoryChip category={c.category} size="sm" />
                 <Text style={styles.categoryAmount}>
-                  {currency} {(c.total as number).toFixed(2)}
+                  {currency}                   {(typeof c.total === 'number' ? c.total : 0).toFixed(2)}
                 </Text>
               </View>
             ))}
@@ -96,8 +148,29 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
         </View>
       )}
 
+      <View style={styles.sortRow}>
+        <TouchableOpacity
+          style={[styles.sortChip, sortBy === "date" && styles.sortChipActive]}
+          onPress={() => setSortBy("date")}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.sortChipText, sortBy === "date" && styles.sortChipTextActive]}>
+            Date
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.sortChip, sortBy === "amount" && styles.sortChipActive]}
+          onPress={() => setSortBy("amount")}
+          activeOpacity={0.7}
+        >
+          <Text style={[styles.sortChipText, sortBy === "amount" && styles.sortChipTextActive]}>
+            Amount
+          </Text>
+        </TouchableOpacity>
+      </View>
+
       <FlatList
-        data={trip.receipts}
+        data={sortedReceipts}
         keyExtractor={(item: ReceiptListItem) => item.id}
         renderItem={({ item }: { item: ReceiptListItem }) => (
           <ReceiptCard
@@ -118,9 +191,24 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyText}>No receipts in this trip</Text>
+            <TouchableOpacity
+              style={styles.emptyCaptureButton}
+              onPress={() => navigation.navigate("CaptureModal", { tripId: id })}
+              activeOpacity={0.8}
+            >
+              <Text style={styles.emptyCaptureButtonText}>Capture a receipt</Text>
+            </TouchableOpacity>
           </View>
         }
       />
+
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate("CaptureModal", { tripId: id })}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.fabIcon}>+</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -139,6 +227,33 @@ const styles = StyleSheet.create({
   loadingText: {
     ...typography.bodyMd,
     color: colors.textSecondary,
+  },
+  errorIcon: {
+    fontSize: 48,
+    marginBottom: spacing.lg,
+  },
+  errorTitle: {
+    ...typography.headlineLg,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  errorMessage: {
+    ...typography.bodyMd,
+    color: colors.textTertiary,
+    textAlign: "center",
+    paddingHorizontal: spacing.xxl,
+    marginBottom: spacing.xl,
+  },
+  retryButton: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.md,
+    borderRadius: radii.lg,
+  },
+  retryButtonText: {
+    ...typography.labelMd,
+    color: colors.onPrimary,
+    fontWeight: "700",
   },
   header: {
     padding: spacing.lg,
@@ -219,5 +334,66 @@ const styles = StyleSheet.create({
   emptyText: {
     ...typography.bodyMd,
     color: colors.textTertiary,
+  },
+  emptyCaptureButton: {
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: radii.lg,
+    backgroundColor: colors.primary,
+  },
+  emptyCaptureButtonText: {
+    ...typography.labelMd,
+    color: colors.onPrimary,
+    fontWeight: "600",
+  },
+  sortRow: {
+    flexDirection: "row",
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    gap: spacing.sm,
+  },
+  sortChip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  sortChipActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  sortChipText: {
+    ...typography.bodySm,
+    color: colors.textSecondary,
+  },
+  sortChipTextActive: {
+    color: colors.onPrimary,
+  },
+  editButton: {
+    ...typography.labelMd,
+    color: colors.primary,
+  },
+  fab: {
+    position: "absolute",
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: radii.full,
+    backgroundColor: colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    elevation: 6,
+    shadowColor: colors.shadowStrong,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 8,
+  },
+  fabIcon: {
+    fontSize: 28,
+    color: colors.onPrimary,
+    fontWeight: "300",
   },
 });

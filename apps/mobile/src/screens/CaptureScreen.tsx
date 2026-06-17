@@ -1,17 +1,34 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Image } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
+import { getNetworkStateAsync } from "expo-network";
 import { uploadReceipt } from "../api/client";
-import { addToQueue } from "../services/offlineQueue";
-import { checkHealth } from "../api/client";
+import { addToQueue, getQueueCount } from "../services/offlineQueue";
 import { colors, typography, spacing, radii } from "../ui/theme";
 
-export function CaptureScreen({ navigation }: { navigation: any }) {
+type FlashMode = "off" | "on";
+
+export function CaptureScreen({ navigation, route }: { navigation: any; route: any }) {
+  const tripId: string | undefined = route.params?.tripId;
   const [permission, requestPermission] = useCameraPermissions();
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [queueLength, setQueueLength] = useState(0);
+  const [flashMode, setFlashMode] = useState<FlashMode>("off");
   const cameraRef = useRef<CameraView>(null);
+
+  useEffect(() => {
+    checkConnection();
+  }, []);
+
+  async function checkConnection() {
+    const state = await getNetworkStateAsync();
+    setIsOffline(!(state.isConnected && state.isInternetReachable));
+    const count = await getQueueCount();
+    setQueueLength(count);
+  }
 
   if (!permission) {
     return <View />;
@@ -61,26 +78,22 @@ export function CaptureScreen({ navigation }: { navigation: any }) {
     if (!capturedImage) return;
     setUploading(true);
 
-    try {
-      const online = await checkHealth();
-      const parts = capturedImage.split(",");
-      const base64 = parts[1] || parts[0];
-      const mimeType = capturedImage.startsWith("data:image/png") ? "image/png" : "image/jpeg";
+    const parts = capturedImage.split(",");
+    const base64 = parts[1] || parts[0];
+    const mimeType = capturedImage.startsWith("data:image/png") ? "image/png" : "image/jpeg";
 
-      if (online) {
-        await uploadReceipt(base64, mimeType);
-        navigation.goBack();
-      } else {
-        await addToQueue({
-          id: Date.now().toString(),
-          imageBase64: base64,
-          mimeType,
-        });
-        Alert.alert("Queued", "Receipt saved offline. It will upload when you're back online.");
-        navigation.goBack();
-      }
-    } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to upload receipt");
+    try {
+      await uploadReceipt(base64, mimeType, tripId);
+      navigation.goBack();
+    } catch (_err) {
+      await addToQueue({
+        id: Date.now().toString(),
+        imageBase64: base64,
+        mimeType,
+        tripId,
+      });
+      Alert.alert("Queued", "Receipt saved offline. It will upload when you're back online.");
+      navigation.goBack();
     } finally {
       setUploading(false);
     }
@@ -119,13 +132,19 @@ export function CaptureScreen({ navigation }: { navigation: any }) {
 
   return (
     <View style={styles.container}>
-      <CameraView ref={cameraRef} style={styles.camera} facing="back">
+      <CameraView ref={cameraRef} style={styles.camera} facing="back" flash={flashMode}>
         <View style={styles.cameraOverlay}>
+          {isOffline && (
+            <View style={styles.offlinePill}>
+              <Text style={styles.offlinePillText}>Offline — queued{queueLength > 0 ? ` (${queueLength})` : ""}</Text>
+            </View>
+          )}
           <View style={styles.guideFrame}>
             <View style={styles.guideCornerTL} />
             <View style={styles.guideCornerTR} />
             <View style={styles.guideCornerBL} />
             <View style={styles.guideCornerBR} />
+            <Text style={styles.guidanceText}>Align receipt within the frame</Text>
           </View>
           <View style={styles.captureRow}>
             <TouchableOpacity
@@ -142,7 +161,16 @@ export function CaptureScreen({ navigation }: { navigation: any }) {
             >
               <View style={styles.captureButtonInner} />
             </TouchableOpacity>
-            <View style={styles.galleryButton} />
+            <TouchableOpacity
+              style={styles.flashButton}
+              onPress={() => setFlashMode((m) => (m === "off" ? "on" : "off"))}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.flashButtonText}>
+                {flashMode === "on" ? "\u26A1" : "\u26A1"}
+              </Text>
+              <Text style={styles.flashLabel}>{flashMode === "on" ? "On" : "Off"}</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </CameraView>
@@ -322,5 +350,44 @@ const styles = StyleSheet.create({
     ...typography.labelMd,
     color: colors.onPrimary,
     fontWeight: "600",
+  },
+  offlinePill: {
+    position: "absolute",
+    top: 16,
+    alignSelf: "center",
+    backgroundColor: colors.statusProcessing,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: radii.full,
+    zIndex: 10,
+  },
+  offlinePillText: {
+    ...typography.labelSm,
+    color: colors.onPrimary,
+    fontSize: 12,
+  },
+  guidanceText: {
+    position: "absolute",
+    bottom: -24,
+    alignSelf: "center",
+    color: "rgba(255,255,255,0.7)",
+    fontSize: 13,
+    fontWeight: "500",
+  },
+  flashButton: {
+    width: 56,
+    height: 56,
+    borderRadius: radii.full,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  flashButtonText: {
+    fontSize: 24,
+    color: colors.onPrimary,
+  },
+  flashLabel: {
+    ...typography.labelSm,
+    color: colors.onPrimary,
+    marginTop: 2,
   },
 });

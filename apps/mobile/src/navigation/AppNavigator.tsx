@@ -34,7 +34,7 @@ function TabIcon({ label, focused }: { label: string; focused: boolean }) {
 
 const tabStyles = StyleSheet.create({
   icon: { alignItems: "center", justifyContent: "center" },
-  symbol: { fontSize: 22, color: colors.textTertiary },
+  symbol: { fontSize: 22, color: colors.secondary },
   symbolActive: { color: colors.primary },
 });
 
@@ -50,8 +50,6 @@ function MainTabs() {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.borderLight,
-          height: 60,
-          paddingBottom: 8,
           paddingTop: 4,
         },
         tabBarLabelStyle: {
