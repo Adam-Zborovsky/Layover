@@ -7,12 +7,17 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Modal,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import { fetchSettings, updateSettings, checkHealth, fetchReceipts } from "../api/client";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { fetchSettings, updateSettings, checkHealth, fetchReceipts, fetchTrips } from "../api/client";
 import { setBaseUrl, setAuthToken, getBaseUrl, getAuthToken } from "../api/auth";
 import { colors, typography, spacing, radii } from "../ui/theme";
 
 export function SettingsScreen() {
+  const insets = useSafeAreaInsets();
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [serverUrl, setServerUrl] = useState("");
@@ -21,6 +26,8 @@ export function SettingsScreen() {
   const [showToken, setShowToken] = useState(false);
   const [aiModel, setAiModel] = useState("gemini-2.5-flash");
   const [receiptCount, setReceiptCount] = useState<number | null>(null);
+  const [trips, setTrips] = useState<{ id: string; name: string }[]>([]);
+  const [tripPickerVisible, setTripPickerVisible] = useState(false);
   const templateInputRef = useRef<TextInput>(null);
 
   useEffect(() => {
@@ -43,6 +50,10 @@ export function SettingsScreen() {
       const result = (await fetchReceipts({ pageSize: 1 })) as any;
       const count = typeof result?.total === "number" ? result.total : (Array.isArray(result) ? result.length : null);
       setReceiptCount(count);
+    } catch {}
+    try {
+      const tripsData = (await fetchTrips()) as { id: string; name: string }[];
+      setTrips(Array.isArray(tripsData) ? tripsData : []);
     } catch {}
     setLoading(false);
   }
@@ -87,6 +98,10 @@ export function SettingsScreen() {
   }
 
   return (
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.header}>
         <Text style={styles.title}>Settings</Text>
@@ -250,6 +265,20 @@ export function SettingsScreen() {
             placeholderTextColor={colors.textTertiary}
           />
         </View>
+        <View style={[styles.divider, { marginVertical: spacing.md }]} />
+        <View style={styles.prefRow}>
+          <Text style={styles.fieldLabel}>Default Trip</Text>
+          <TouchableOpacity
+            onPress={() => setTripPickerVisible(true)}
+            style={{ flex: 1, alignItems: "flex-end" }}
+          >
+            <Text style={[styles.input, { color: settings.defaultTripId ? colors.primary : colors.textTertiary }]}>
+              {settings.defaultTripId
+                ? trips.find((t) => t.id === settings.defaultTripId)?.name || "Unknown"
+                : "None"}
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <Text style={styles.sectionTitle}>Data &amp; Backup</Text>
@@ -271,6 +300,52 @@ export function SettingsScreen() {
         </View>
       </View>
 
+      <Modal visible={tripPickerVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { paddingBottom: spacing.xxxl + insets.bottom }]}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Default Trip</Text>
+            <Text style={styles.modalSubtitle}>
+              New receipts will be auto-assigned to this trip
+            </Text>
+            <TouchableOpacity
+              style={[styles.tripOption, !settings.defaultTripId && styles.tripOptionActive]}
+              onPress={() => {
+                updateSetting("defaultTripId", "");
+                setTripPickerVisible(false);
+              }}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.tripOptionText, !settings.defaultTripId && styles.tripOptionTextActive]}>
+                None
+              </Text>
+            </TouchableOpacity>
+            {trips.map((t) => (
+              <TouchableOpacity
+                key={t.id}
+                style={[styles.tripOption, settings.defaultTripId === t.id && styles.tripOptionActive]}
+                onPress={() => {
+                  updateSetting("defaultTripId", t.id);
+                  setTripPickerVisible(false);
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.tripOptionText, settings.defaultTripId === t.id && styles.tripOptionTextActive]}>
+                  {t.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.modalCancelButton}
+              onPress={() => setTripPickerVisible(false)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.modalCancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.footer}>
         <Text style={styles.footerText}>Layover v2.4.1 (Stable Build)</Text>
       </View>
@@ -283,6 +358,7 @@ export function SettingsScreen() {
         <Text style={styles.saveButtonText}>Save Settings</Text>
       </TouchableOpacity>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -549,5 +625,66 @@ const styles = StyleSheet.create({
     color: colors.onPrimary,
     fontWeight: "700",
     fontSize: 16,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: colors.divider,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radii.xl + 12,
+    borderTopRightRadius: radii.xl + 12,
+    padding: spacing.xl,
+    paddingBottom: spacing.xxxl,
+  },
+  modalHandle: {
+    width: 48,
+    height: 4,
+    backgroundColor: colors.border,
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: spacing.xl,
+  },
+  modalTitle: {
+    ...typography.displaySm,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  modalSubtitle: {
+    ...typography.bodySm,
+    color: colors.textTertiary,
+    marginBottom: spacing.lg,
+  },
+  tripOption: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+    borderRadius: radii.md,
+    marginBottom: spacing.xs,
+    backgroundColor: colors.borderLight,
+  },
+  tripOptionActive: {
+    backgroundColor: colors.primaryDim,
+  },
+  tripOptionText: {
+    ...typography.bodyMd,
+    color: colors.textPrimary,
+  },
+  tripOptionTextActive: {
+    color: colors.primary,
+    fontWeight: "600",
+  },
+  modalCancelButton: {
+    paddingVertical: spacing.md,
+    alignItems: "center",
+    marginTop: spacing.sm,
+  },
+  modalCancelText: {
+    ...typography.bodyMd,
+    color: colors.textSecondary,
   },
 });

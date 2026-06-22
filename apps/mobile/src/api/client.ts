@@ -1,4 +1,5 @@
 import { getNetworkStateAsync } from "expo-network";
+import { Paths, File } from "expo-file-system";
 import { getBaseUrl, getAuthToken } from "./auth";
 
 export class ApiError extends Error {
@@ -57,7 +58,9 @@ export async function apiRequest<T = unknown>(
   }
 
   const networkState = await getNetworkStateAsync();
-  if (!networkState.isConnected || !networkState.isInternetReachable) {
+  // isInternetReachable is null on Android (documented unreliable) — only block
+  // on an explicit false to avoid queuing every upload when actually online.
+  if (networkState.isConnected === false || networkState.isInternetReachable === false) {
     throw new ApiError(0, "No network connection", false, true);
   }
 
@@ -176,14 +179,30 @@ export async function deleteReceipt(id: string) {
   return apiRequest(`/receipts/${id}`, { method: "DELETE" });
 }
 
-export async function getReceiptImageUrl(id: string): Promise<string> {
+// React Native's <Image source={{ uri, headers }}> does not reliably send the
+// Authorization header on Android (especially under the New Architecture), so
+// auth-protected images come back 401 and render blank. Download the image to a
+// local cache file (with the Bearer header) via expo-file-system — the same
+// mechanism ExportScreen uses successfully — and hand <Image> the resulting
+// file:// URI, which needs no header support to render.
+async function downloadImageToCache(path: string, cacheName: string): Promise<string> {
   const baseUrl = await getBaseUrl();
-  return `${baseUrl}/receipts/${id}/image`;
+  const token = await getAuthToken();
+
+  const dest = new File(Paths.cache, cacheName);
+  const file = await File.downloadFileAsync(`${baseUrl}${path}`, dest, {
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    idempotent: true, // overwrite a stale cached copy instead of throwing
+  });
+  return file.uri;
 }
 
-export async function getReceiptThumbnailUrl(id: string): Promise<string> {
-  const baseUrl = await getBaseUrl();
-  return `${baseUrl}/receipts/${id}/thumbnail`;
+export function fetchReceiptImage(id: string): Promise<string> {
+  return downloadImageToCache(`/receipts/${id}/image`, `receipt_${id}.jpg`);
+}
+
+export function fetchReceiptThumbnail(id: string): Promise<string> {
+  return downloadImageToCache(`/receipts/${id}/thumbnail`, `receipt_${id}_thumb.jpg`);
 }
 
 export async function fetchTrips() {
@@ -202,8 +221,11 @@ export async function updateTrip(id: string, data: Record<string, unknown>) {
   return apiRequest(`/trips/${id}`, { method: "PATCH", body: data });
 }
 
-export async function deleteTrip(id: string) {
-  return apiRequest(`/trips/${id}`, { method: "DELETE" });
+export async function deleteTrip(id: string, deleteReceipts?: boolean) {
+  return apiRequest(`/trips/${id}`, {
+    method: "DELETE",
+    params: deleteReceipts ? { deleteReceipts: "true" } : undefined,
+  });
 }
 
 export async function exportReceipts(receiptIds: string[], formats: ("zip" | "pdf" | "csv")[]) {

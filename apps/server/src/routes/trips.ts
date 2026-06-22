@@ -1,5 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import prisma from "../lib/prisma.js";
+import { deleteImage } from "../services/storage.js";
 import { tripCreateSchema, tripUpdateSchema } from "@recipts/shared";
 
 export async function tripRoutes(app: FastifyInstance) {
@@ -8,6 +9,9 @@ export async function tripRoutes(app: FastifyInstance) {
       orderBy: { startDate: "desc" },
       include: {
         _count: { select: { receipts: true } },
+        receipts: {
+          select: { total: true },
+        },
       },
     });
 
@@ -19,6 +23,7 @@ export async function tripRoutes(app: FastifyInstance) {
       notes: t.notes,
       createdAt: t.createdAt,
       receiptCount: t._count.receipts,
+      totalAmount: t.receipts.reduce((sum, r) => sum + r.total, 0),
     }));
   });
 
@@ -79,7 +84,19 @@ export async function tripRoutes(app: FastifyInstance) {
 
   app.delete("/trips/:id", async (request, reply) => {
     const { id } = request.params as { id: string };
-    await prisma.receipt.updateMany({ where: { tripId: id }, data: { tripId: null } });
+    const deleteReceipts = (request.query as { deleteReceipts?: string }).deleteReceipts === "true";
+
+    if (deleteReceipts) {
+      const receipts = await prisma.receipt.findMany({ where: { tripId: id }, select: { id: true, imagePath: true, thumbnailPath: true } });
+      for (const r of receipts) {
+        await deleteImage(r.imagePath);
+        await deleteImage(r.thumbnailPath);
+      }
+      await prisma.receipt.deleteMany({ where: { tripId: id } });
+    } else {
+      await prisma.receipt.updateMany({ where: { tripId: id }, data: { tripId: null } });
+    }
+
     await prisma.trip.delete({ where: { id } });
     return reply.status(204).send();
   });

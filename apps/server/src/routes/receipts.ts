@@ -6,19 +6,27 @@ import { deriveFileName, resolveCollision } from "../services/filename.js";
 import { receiptCreateSchema, receiptUpdateSchema, receiptListQuerySchema } from "@recipts/shared";
 import type { ReceiptCategory } from "@recipts/shared";
 
-async function processReceipt(receiptId: string, imageBase64: string, mimeType: string) {
+async function processReceipt(receiptId: string, imageBase64: string, mimeType: string, model?: "gemini-2.5-flash" | "gemini-2.5-pro") {
   try {
-    const result = await extractReceipt(imageBase64, mimeType, "gemini-2.5-flash");
+    let finalResult;
+    let usedModel: string;
 
-    const confidence = result.confidence;
-    let finalResult = result;
+    if (model) {
+      finalResult = await extractReceipt(imageBase64, mimeType, model);
+      usedModel = model;
+    } else {
+      const result = await extractReceipt(imageBase64, mimeType, "gemini-2.5-flash");
+      usedModel = "gemini-2.5-flash";
+      finalResult = result;
 
-    if (confidence < 0.6 || result.total === 0) {
-      try {
-        const proResult = await extractReceipt(imageBase64, mimeType, "gemini-2.5-pro");
-        finalResult = proResult;
-      } catch {
-        // keep flash result if pro fails
+      if (result.confidence < 0.6 || result.total === 0) {
+        try {
+          const proResult = await extractReceipt(imageBase64, mimeType, "gemini-2.5-pro");
+          finalResult = proResult;
+          usedModel = "gemini-2.5-pro";
+        } catch {
+          // keep flash result if pro fails
+        }
       }
     }
 
@@ -56,7 +64,7 @@ async function processReceipt(receiptId: string, imageBase64: string, mimeType: 
         paymentMethod: finalResult.paymentMethod,
         aiRaw: JSON.stringify(finalResult),
         aiConfidence: finalResult.confidence,
-        aiModel: "gemini-2.5-flash",
+        aiModel: usedModel,
         status,
         fileName: resolvedName,
       },
@@ -208,7 +216,7 @@ export async function receiptRoutes(app: FastifyInstance) {
     const mimeType = receipt.imagePath.endsWith(".png") ? "image/png" : "image/jpeg";
     const base64 = imageBuf.toString("base64");
 
-    processReceipt(id, base64, mimeType);
+    processReceipt(id, base64, mimeType, model);
 
     return { status: "PROCESSING" };
   });

@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
+import { Ionicons } from "@expo/vector-icons";
 import { ReceiptCard } from "../components/ReceiptCard";
 import { fetchReceipts } from "../api/client";
 import { getAuthToken } from "../api/auth";
@@ -73,6 +74,15 @@ export function HomeScreen({ navigation }: { navigation: any }) {
     }, [load])
   );
 
+  useEffect(() => {
+    const hasProcessing = receipts.some((r) => r.status === "PROCESSING");
+    if (!hasProcessing) return;
+    const interval = setInterval(() => {
+      load();
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [receipts, load]);
+
   const onRefresh = async () => {
     setRefreshing(true);
     await load();
@@ -112,11 +122,11 @@ export function HomeScreen({ navigation }: { navigation: any }) {
             accessibilityLabel="Capture new receipt"
             accessibilityRole="button"
           >
-            <Text style={styles.captureFabIcon}>+</Text>
+            <Ionicons name="add" size={28} color={colors.onPrimary} style={{ marginTop: -2 }} />
           </TouchableOpacity>
         </View>
         <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>&#x1F50D;</Text>
+          <Ionicons name="search-outline" size={14} color={colors.textTertiary} style={{ marginRight: spacing.sm }} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search receipts..."
@@ -189,7 +199,7 @@ export function HomeScreen({ navigation }: { navigation: any }) {
             </View>
           ) : error ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>&#x26A0;</Text>
+              <Ionicons name="warning-outline" size={48} color={colors.textTertiary} style={{ marginBottom: spacing.lg }} />
               <Text style={styles.emptyTitle}>Something went wrong</Text>
               <Text style={styles.emptySubtitle}>{error}</Text>
               <TouchableOpacity
@@ -204,7 +214,7 @@ export function HomeScreen({ navigation }: { navigation: any }) {
             </View>
           ) : needsSetup ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>&#x2699;</Text>
+              <Ionicons name="settings-outline" size={48} color={colors.textTertiary} style={{ marginBottom: spacing.lg }} />
               <Text style={styles.emptyTitle}>Welcome to Layover</Text>
               <Text style={styles.emptySubtitle}>
                 Set up your server connection in Settings to start tracking receipts.
@@ -221,7 +231,7 @@ export function HomeScreen({ navigation }: { navigation: any }) {
             </View>
           ) : search ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>&#x1F50D;</Text>
+              <Ionicons name="search-outline" size={48} color={colors.textTertiary} style={{ marginBottom: spacing.lg }} />
               <Text style={styles.emptyTitle}>No results found</Text>
               <Text style={styles.emptySubtitle}>
                 No receipts match "{search}"
@@ -229,7 +239,7 @@ export function HomeScreen({ navigation }: { navigation: any }) {
             </View>
           ) : (
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>&#x1F4F7;</Text>
+              <Ionicons name="camera-outline" size={48} color={colors.textTertiary} style={{ marginBottom: spacing.lg }} />
               <Text style={styles.emptyTitle}>No receipts yet</Text>
               <Text style={styles.emptySubtitle}>
                 Capture your first receipt to start tracking expenses

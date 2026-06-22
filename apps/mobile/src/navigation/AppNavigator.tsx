@@ -1,7 +1,7 @@
 import React from "react";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { Text, View, StyleSheet, TouchableOpacity } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { HomeScreen } from "../screens/HomeScreen";
 import { CaptureScreen } from "../screens/CaptureScreen";
 import { ReceiptDetailScreen } from "../screens/ReceiptDetailScreen";
@@ -14,29 +14,24 @@ import { colors, typography } from "../ui/theme";
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const TAB_ICONS: Record<string, { active: string; inactive: string }> = {
-  Home: { active: "\u2302", inactive: "\u2302" },
-  Trips: { active: "\u2708", inactive: "\u2708" },
-  Export: { active: "\u21E7", inactive: "\u21E7" },
-  Settings: { active: "\u2699", inactive: "\u2699" },
+const TAB_ICONS: Record<string, string> = {
+  Home: "receipt",
+  Trips: "airplane",
+  Export: "share",
+  Settings: "settings",
 };
 
 function TabIcon({ label, focused }: { label: string; focused: boolean }) {
-  const icon = TAB_ICONS[label] || { active: "?", inactive: "?" };
+  const base = TAB_ICONS[label] || "ellipse";
+  const name = focused ? base : (`${base}-outline` as any);
   return (
-    <View style={tabStyles.icon}>
-      <Text style={[tabStyles.symbol, focused && tabStyles.symbolActive]}>
-        {focused ? icon.active : icon.inactive}
-      </Text>
-    </View>
+    <Ionicons
+      name={name}
+      size={22}
+      color={focused ? colors.primary : colors.secondary}
+    />
   );
 }
-
-const tabStyles = StyleSheet.create({
-  icon: { alignItems: "center", justifyContent: "center" },
-  symbol: { fontSize: 22, color: colors.secondary },
-  symbolActive: { color: colors.primary },
-});
 
 function MainTabs() {
   return (

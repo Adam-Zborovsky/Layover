@@ -7,9 +7,9 @@ import {
   Image,
   type ImageSourcePropType,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { CategoryChip, StatusBadge } from "./Badges";
-import { getReceiptThumbnailUrl } from "../api/client";
-import { getAuthToken } from "../api/auth";
+import { fetchReceiptThumbnail } from "../api/client";
 import { colors, typography, spacing, radii } from "../ui/theme";
 
 interface ReceiptCardProps {
@@ -50,14 +50,8 @@ export function ReceiptCard({
 
   React.useEffect(() => {
     async function loadThumb() {
-      const [url, token] = await Promise.all([
-        getReceiptThumbnailUrl(id),
-        getAuthToken(),
-      ]);
-      setThumbSource({
-        uri: url,
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
+      const dataUri = await fetchReceiptThumbnail(id);
+      setThumbSource({ uri: dataUri });
     }
     loadThumb().catch(() => {});
   }, [id]);
@@ -107,7 +101,7 @@ export function ReceiptCard({
           <StatusBadge status={status} />
         </View>
       </View>
-      <Text style={styles.chevron} importantForAccessibility="no">›</Text>
+      <Ionicons name="chevron-forward" size={22} color={colors.textTertiary} style={styles.chevron} importantForAccessibility="no" />
     </TouchableOpacity>
   );
 }

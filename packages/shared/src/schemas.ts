@@ -103,4 +103,5 @@ export const settingsSchema = z.object({
   defaultCurrency: z.string().length(3).default("USD"),
   escalationThreshold: z.coerce.number().min(0).max(1).default(0.6),
   categories: z.array(z.string()).optional(),
+  defaultTripId: z.string().optional(),
 });

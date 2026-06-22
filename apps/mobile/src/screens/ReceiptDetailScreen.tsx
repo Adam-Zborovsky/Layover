@@ -13,27 +13,31 @@ import {
   KeyboardAvoidingView,
   type ImageSourcePropType,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   fetchReceipt,
   updateReceipt,
   reprocessReceipt,
   deleteReceipt,
-  getReceiptImageUrl,
+  fetchReceiptImage,
   fetchTrips,
 } from "../api/client";
-import { getAuthToken } from "../api/auth";
 import { ConfidenceIndicator, StatusBadge, CategoryChip } from "../components/Badges";
 import { RECEIPT_CATEGORIES, type Receipt } from "@recipts/shared";
 import { colors, typography, spacing, radii, categoryColors } from "../ui/theme";
+import { formatDateInput } from "../utils/format";
 
 export function ReceiptDetailScreen({ route, navigation }: { route: any; navigation: any }) {
   const { id } = route.params;
+  const insets = useSafeAreaInsets();
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [editing, setEditing] = useState(false);
   const [imageSource, setImageSource] = useState<ImageSourcePropType | null>(null);
+  const [imageError, setImageError] = useState(false);
   const [trips, setTrips] = useState<{ id: string; name: string }[]>([]);
   const [edited, setEdited] = useState<Record<string, any>>({});
   const [lineItemsExpanded, setLineItemsExpanded] = useState(false);
@@ -58,14 +62,13 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
 
   useEffect(() => {
     async function loadImage() {
-      const [url, token] = await Promise.all([
-        getReceiptImageUrl(id),
-        getAuthToken(),
-      ]);
-      setImageSource({
-        uri: url,
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
+      try {
+        const dataUri = await fetchReceiptImage(id);
+        setImageSource({ uri: dataUri });
+        setImageError(false);
+      } catch {
+        setImageError(true);
+      }
     }
     loadImage();
   }, [id]);
@@ -85,8 +88,7 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
     if (!receipt) return;
     setIsSaving(true);
     try {
-      const total = (display.subtotal || 0) + (display.tax || 0) + (display.tip || 0);
-      await updateReceipt(id, { ...edited, total });
+      await updateReceipt(id, edited);
       setEditing(false);
       loadReceipt();
     } catch (err: any) {
@@ -141,7 +143,7 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
   if (error) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorIcon}>&#x26A0;</Text>
+        <Ionicons name="warning-outline" size={48} color={colors.textTertiary} style={{ marginBottom: spacing.lg }} />
         <Text style={styles.errorTitle}>Something went wrong</Text>
         <Text style={styles.errorMessage}>{error}</Text>
         <TouchableOpacity
@@ -181,10 +183,10 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {imageSource ? (
+    <ScrollView style={styles.container} contentContainerStyle={[styles.content, { paddingBottom: spacing.xxxl + insets.bottom }]}>
+      {imageSource && !imageError ? (
         <View style={styles.imageWrapper}>
           <ScrollView
             style={styles.zoomContainer}
@@ -195,7 +197,12 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
             showsHorizontalScrollIndicator={false}
             showsVerticalScrollIndicator={false}
           >
-            <Image source={imageSource} style={styles.image} resizeMode="contain" />
+            <Image
+              source={imageSource}
+              style={styles.image}
+              resizeMode="contain"
+              onError={() => setImageError(true)}
+            />
           </ScrollView>
           <View style={styles.imageOverlay}>
             <View style={styles.confidencePill}>
@@ -205,6 +212,11 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
               </Text>
             </View>
           </View>
+        </View>
+      ) : imageError ? (
+        <View style={styles.imageErrorBox}>
+          <Ionicons name="image-outline" size={32} color={colors.textTertiary} />
+          <Text style={styles.imageErrorText}>Image unavailable</Text>
         </View>
       ) : null}
 
@@ -244,10 +256,13 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
             <TextInput
               style={styles.underlineInput}
               value={display.purchaseDate}
-              onChangeText={(v) => updateField("purchaseDate", v)}
+              onChangeText={(v) => updateField("purchaseDate", formatDateInput(v))}
               editable={editing}
               placeholder="YYYY-MM-DD"
               placeholderTextColor={colors.textTertiary}
+              keyboardType="number-pad"
+              maxLength={10}
+              selectTextOnFocus
             />
           </View>
         </View>
@@ -291,13 +306,25 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
               placeholderTextColor={colors.textTertiary}
             />
           </View>
+          <View style={[styles.field, styles.confidenceBorder, { flex: 1 }]}>
+            <Text style={styles.fieldLabel}>Total</Text>
+            <TextInput
+              style={[styles.underlineInput, { color: colors.primary }]}
+              value={display.total?.toString()}
+              onChangeText={(v) => updateField("total", parseFloat(v) || 0)}
+              editable={editing}
+              keyboardType="decimal-pad"
+              placeholder="$0.00"
+              placeholderTextColor={colors.textTertiary}
+            />
+          </View>
         </View>
 
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total Amount</Text>
           <View style={styles.totalValueRow}>
             <Text style={styles.totalCurrency}>{display.currency || "USD"}</Text>
-            <Text style={styles.totalValue}>${((display.subtotal || 0) + (display.tax || 0) + (display.tip || 0)).toFixed(2)}</Text>
+            <Text style={styles.totalValue}>${(display.total || 0).toFixed(2)}</Text>
           </View>
         </View>
       </View>
@@ -383,7 +410,11 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
             <Text style={styles.infoLabel}>
               Line Items ({receipt.lineItems.length})
             </Text>
-            <Text style={styles.expandIcon}>{lineItemsExpanded ? "\u25B2" : "\u25BC"}</Text>
+            <Ionicons
+              name={lineItemsExpanded ? "chevron-up" : "chevron-down"}
+              size={12}
+              color={colors.textTertiary}
+            />
           </View>
           {lineItemsExpanded &&
             receipt.lineItems.map((item: any, idx: number) => (
@@ -506,6 +537,17 @@ const styles = StyleSheet.create({
   },
   imageWrapper: {
     position: "relative",
+  },
+  imageErrorBox: {
+    height: 120,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.borderLight,
+    gap: spacing.sm,
+  },
+  imageErrorText: {
+    ...typography.bodySm,
+    color: colors.textTertiary,
   },
   zoomContainer: {
     width: "100%",

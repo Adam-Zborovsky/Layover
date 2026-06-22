@@ -1,6 +1,6 @@
 import type { FastifyInstance } from "fastify";
 import prisma from "../lib/prisma.js";
-import { generateZip, generatePdf, generateCsv } from "../services/export.js";
+import { generateZip, generatePdf, generateCsv, EXPORT_DIR } from "../services/export.js";
 import { exportRequestSchema } from "@recipts/shared";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
@@ -49,8 +49,7 @@ export async function exportRoutes(app: FastifyInstance) {
   app.get("/export/:path", async (request, reply) => {
     const { path } = request.params as { path: string };
     const safePath = path.replace(/\.\./g, "").replace(/[\/\\]/g, "");
-    const dataDir = join(process.cwd(), "../../data/exports");
-    const fullPath = join(dataDir, safePath);
+    const fullPath = join(EXPORT_DIR, safePath);
 
     if (!existsSync(fullPath)) {
       return reply.status(404).send({ error: "Not Found", message: "Export not found", statusCode: 404 });

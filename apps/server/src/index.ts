@@ -8,7 +8,7 @@ import { exportRoutes } from "./routes/export.js";
 import { settingsRoutes } from "./routes/settings.js";
 import { config } from "./config.js";
 
-const app = Fastify({ logger: true });
+const app = Fastify({ logger: true, bodyLimit: 50 * 1024 * 1024 }); // 50MB for base64 image uploads
 
 await app.register(cors, { origin: true });
 

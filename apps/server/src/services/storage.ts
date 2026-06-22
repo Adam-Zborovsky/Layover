@@ -1,10 +1,12 @@
 import { randomUUID } from "node:crypto";
 import { mkdir, writeFile, readFile, unlink } from "node:fs/promises";
-import { join } from "node:path";
+import { join, isAbsolute } from "node:path";
 import sharp from "sharp";
 import { config } from "../config.js";
 
-const UPLOAD_DIR = join(process.cwd(), config.uploadDir);
+const UPLOAD_DIR = isAbsolute(config.uploadDir)
+  ? config.uploadDir
+  : join(process.cwd(), config.uploadDir);
 const THUMB_WIDTH = 400;
 const THUMB_HEIGHT = 300;
 const JPEG_QUALITY = 85;

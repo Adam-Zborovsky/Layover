@@ -2,8 +2,10 @@ import React, { useState, useRef, useEffect } from "react";
 import { View, Text, StyleSheet, TouchableOpacity, Alert, Image } from "react-native";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
+import { Ionicons } from "@expo/vector-icons";
 import { getNetworkStateAsync } from "expo-network";
-import { uploadReceipt } from "../api/client";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { uploadReceipt, fetchSettings, fetchTrip, ApiError } from "../api/client";
 import { addToQueue, getQueueCount } from "../services/offlineQueue";
 import { colors, typography, spacing, radii } from "../ui/theme";
 
@@ -11,16 +13,20 @@ type FlashMode = "off" | "on";
 
 export function CaptureScreen({ navigation, route }: { navigation: any; route: any }) {
   const tripId: string | undefined = route.params?.tripId;
+  const insets = useSafeAreaInsets();
   const [permission, requestPermission] = useCameraPermissions();
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [queueLength, setQueueLength] = useState(0);
   const [flashMode, setFlashMode] = useState<FlashMode>("off");
+  const [defaultTripId, setDefaultTripId] = useState<string | null>(null);
+  const [defaultTripName, setDefaultTripName] = useState<string | null>(null);
   const cameraRef = useRef<CameraView>(null);
 
   useEffect(() => {
     checkConnection();
+    loadDefaultTrip();
   }, []);
 
   async function checkConnection() {
@@ -30,6 +36,20 @@ export function CaptureScreen({ navigation, route }: { navigation: any; route: a
     setQueueLength(count);
   }
 
+  async function loadDefaultTrip() {
+    try {
+      const settings = (await fetchSettings()) as Record<string, string>;
+      const dtId = settings.defaultTripId || null;
+      setDefaultTripId(dtId);
+      if (dtId) {
+        const trip = (await fetchTrip(dtId)) as { name: string };
+        setDefaultTripName(trip.name);
+      }
+    } catch {}
+  }
+
+  const effectiveTripId = tripId || defaultTripId || undefined;
+
   if (!permission) {
     return <View />;
   }
@@ -37,7 +57,7 @@ export function CaptureScreen({ navigation, route }: { navigation: any; route: a
   if (!permission.granted) {
     return (
       <View style={styles.permissionContainer}>
-        <Text style={styles.permissionIcon}>&#x1F4F7;</Text>
+        <Ionicons name="camera-outline" size={48} color={colors.textPrimary} style={{ marginBottom: spacing.lg }} />
         <Text style={styles.permissionTitle}>Camera access needed</Text>
         <Text style={styles.permissionText}>
           Layover needs camera permission to scan your receipts and track expenses.
@@ -55,7 +75,7 @@ export function CaptureScreen({ navigation, route }: { navigation: any; route: a
 
   async function takePhoto() {
     if (cameraRef.current) {
-      const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 0.8 });
+      const photo = await cameraRef.current.takePictureAsync({ base64: true, quality: 0.8, shutterSound: false });
       if (photo?.base64) {
         setCapturedImage(`data:image/jpeg;base64,${photo.base64}`);
       }
@@ -70,7 +90,8 @@ export function CaptureScreen({ navigation, route }: { navigation: any; route: a
     });
 
     if (!result.canceled && result.assets[0].base64) {
-      setCapturedImage(`data:image/jpeg;base64,${result.assets[0].base64}`);
+      const mime = result.assets[0].mimeType || "image/jpeg";
+      setCapturedImage(`data:${mime};base64,${result.assets[0].base64}`);
     }
   }
 
@@ -80,19 +101,38 @@ export function CaptureScreen({ navigation, route }: { navigation: any; route: a
 
     const parts = capturedImage.split(",");
     const base64 = parts[1] || parts[0];
-    const mimeType = capturedImage.startsWith("data:image/png") ? "image/png" : "image/jpeg";
+    const mimeMatch = capturedImage.match(/^data:(image\/[a-z+]+);base64,/);
+    const mimeType = mimeMatch ? mimeMatch[1] : "image/jpeg";
 
     try {
-      await uploadReceipt(base64, mimeType, tripId);
+      await uploadReceipt(base64, mimeType, effectiveTripId);
       navigation.goBack();
-    } catch (_err) {
-      await addToQueue({
+    } catch (err) {
+      if (err instanceof ApiError && err.isAuthError) {
+        Alert.alert("Authentication Failed", "Check your server URL and token in Settings.");
+        setUploading(false);
+        return;
+      }
+      if (err instanceof ApiError && !err.isNetworkError) {
+        Alert.alert("Upload Failed", err.message || "Server rejected the upload. Please try again.");
+        setUploading(false);
+        return;
+      }
+      const result = await addToQueue({
         id: Date.now().toString(),
         imageBase64: base64,
         mimeType,
-        tripId,
+        tripId: effectiveTripId,
       });
-      Alert.alert("Queued", "Receipt saved offline. It will upload when you're back online.");
+      if (!result.queued) {
+        Alert.alert("Upload Failed", result.warning || "Image is too large to queue. Try a smaller image.");
+        setUploading(false);
+        return;
+      }
+      Alert.alert(
+        "Queued",
+        result.warning ?? "Receipt saved offline. It will upload when you're back online.",
+      );
       navigation.goBack();
     } finally {
       setUploading(false);
@@ -107,7 +147,7 @@ export function CaptureScreen({ navigation, route }: { navigation: any; route: a
     return (
       <View style={styles.previewContainer}>
         <Image source={{ uri: capturedImage }} style={styles.preview} />
-        <View style={styles.previewActions}>
+        <View style={[styles.previewActions, { paddingBottom: 40 + insets.bottom }]}>
           <TouchableOpacity
             style={styles.retakeButton}
             onPress={retake}
@@ -133,26 +173,24 @@ export function CaptureScreen({ navigation, route }: { navigation: any; route: a
   return (
     <View style={styles.container}>
       <CameraView ref={cameraRef} style={styles.camera} facing="back" flash={flashMode}>
-        <View style={styles.cameraOverlay}>
+        <View style={[styles.cameraOverlay, { paddingBottom: 40 + insets.bottom }]}>
           {isOffline && (
             <View style={styles.offlinePill}>
               <Text style={styles.offlinePillText}>Offline — queued{queueLength > 0 ? ` (${queueLength})` : ""}</Text>
             </View>
           )}
-          <View style={styles.guideFrame}>
-            <View style={styles.guideCornerTL} />
-            <View style={styles.guideCornerTR} />
-            <View style={styles.guideCornerBL} />
-            <View style={styles.guideCornerBR} />
-            <Text style={styles.guidanceText}>Align receipt within the frame</Text>
-          </View>
+          {defaultTripName && !tripId && (
+            <View style={[styles.offlinePill, { backgroundColor: colors.statusConfirmed, top: isOffline ? 52 : 16 }]}>
+              <Text style={styles.offlinePillText}>Trip: {defaultTripName}</Text>
+            </View>
+          )}
           <View style={styles.captureRow}>
             <TouchableOpacity
               style={styles.galleryButton}
               onPress={pickFromGallery}
               activeOpacity={0.7}
             >
-              <Text style={styles.galleryButtonText}>&#x1F5BC;</Text>
+              <Ionicons name="images-outline" size={28} color={colors.onPrimary} />
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.captureButton}
@@ -166,9 +204,11 @@ export function CaptureScreen({ navigation, route }: { navigation: any; route: a
               onPress={() => setFlashMode((m) => (m === "off" ? "on" : "off"))}
               activeOpacity={0.7}
             >
-              <Text style={styles.flashButtonText}>
-                {flashMode === "on" ? "\u26A1" : "\u26A1"}
-              </Text>
+              <Ionicons
+                name={flashMode === "on" ? "flash-outline" : "flash-off-outline"}
+                size={24}
+                color={colors.onPrimary}
+              />
               <Text style={styles.flashLabel}>{flashMode === "on" ? "On" : "Off"}</Text>
             </TouchableOpacity>
           </View>
@@ -190,60 +230,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "flex-end",
     paddingBottom: 40,
-  },
-  guideFrame: {
-    position: "absolute",
-    top: "20%",
-    left: "10%",
-    right: "10%",
-    bottom: "30%",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
-    borderRadius: radii.lg,
-  },
-  guideCornerTL: {
-    position: "absolute",
-    top: -1,
-    left: -1,
-    width: 24,
-    height: 24,
-    borderTopWidth: 3,
-    borderLeftWidth: 3,
-    borderColor: colors.primary,
-    borderTopLeftRadius: radii.md,
-  },
-  guideCornerTR: {
-    position: "absolute",
-    top: -1,
-    right: -1,
-    width: 24,
-    height: 24,
-    borderTopWidth: 3,
-    borderRightWidth: 3,
-    borderColor: colors.primary,
-    borderTopRightRadius: radii.md,
-  },
-  guideCornerBL: {
-    position: "absolute",
-    bottom: -1,
-    left: -1,
-    width: 24,
-    height: 24,
-    borderBottomWidth: 3,
-    borderLeftWidth: 3,
-    borderColor: colors.primary,
-    borderBottomLeftRadius: radii.md,
-  },
-  guideCornerBR: {
-    position: "absolute",
-    bottom: -1,
-    right: -1,
-    width: 24,
-    height: 24,
-    borderBottomWidth: 3,
-    borderRightWidth: 3,
-    borderColor: colors.primary,
-    borderBottomRightRadius: radii.md,
   },
   captureRow: {
     flexDirection: "row",
@@ -365,14 +351,6 @@ const styles = StyleSheet.create({
     ...typography.labelSm,
     color: colors.onPrimary,
     fontSize: 12,
-  },
-  guidanceText: {
-    position: "absolute",
-    bottom: -24,
-    alignSelf: "center",
-    color: "rgba(255,255,255,0.7)",
-    fontSize: 13,
-    fontWeight: "500",
   },
   flashButton: {
     width: 56,

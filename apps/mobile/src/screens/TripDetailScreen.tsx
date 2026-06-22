@@ -7,11 +7,18 @@ import {
   Alert,
   TouchableOpacity,
   ActivityIndicator,
+  Modal,
+  TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import { fetchTrip } from "../api/client";
+import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { fetchTrip, updateTrip, fetchSettings, updateSettings } from "../api/client";
 import { ReceiptCard } from "../components/ReceiptCard";
 import { CategoryChip } from "../components/Badges";
 import { colors, typography, spacing, radii } from "../ui/theme";
+import { formatDateInput } from "../utils/format";
 import type { ReceiptListItem } from "@recipts/shared";
 
 type SortBy = "date" | "amount";
@@ -22,23 +29,84 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<SortBy>("date");
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editStart, setEditStart] = useState("");
+  const [editEnd, setEditEnd] = useState("");
+  const [editNotes, setEditNotes] = useState("");
+  const [defaultTripId, setDefaultTripId] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     loadTrip();
   }, [id]);
 
   useEffect(() => {
+    loadDefaultTrip();
+  }, [id]);
+
+  useEffect(() => {
+    if (!trip) return;
+    const isDefault = trip.id === defaultTripId;
     navigation.setOptions({
       headerRight: () => (
-        <TouchableOpacity
-          onPress={() => Alert.alert("Edit Trip", "Edit trip coming soon")}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.editButton}>Edit</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: "row", gap: spacing.md }}>
+          <TouchableOpacity
+            onPress={toggleDefault}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name={isDefault ? "bookmark" : "bookmark-outline"}
+              size={22}
+              color={colors.primary}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={openEditModal}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.editButton}>Edit</Text>
+          </TouchableOpacity>
+        </View>
       ),
     });
-  }, [navigation]);
+  }, [navigation, trip, defaultTripId]);
+
+  async function loadDefaultTrip() {
+    try {
+      const settings = (await fetchSettings()) as Record<string, string>;
+      setDefaultTripId(settings.defaultTripId || null);
+    } catch {}
+  }
+
+  function openEditModal() {
+    if (!trip) return;
+    setEditName(trip.name || "");
+    setEditStart(trip.startDate || "");
+    setEditEnd(trip.endDate || "");
+    setEditNotes(trip.notes || "");
+    setEditModalVisible(true);
+  }
+
+  async function handleSaveEdit() {
+    if (!editName.trim() || !editStart.trim() || !editEnd.trim()) {
+      Alert.alert("Missing fields", "Please fill in trip name, start date, and end date");
+      return;
+    }
+    try {
+      await updateTrip(trip.id, { name: editName, startDate: editStart, endDate: editEnd, notes: editNotes });
+      setEditModalVisible(false);
+      loadTrip();
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Failed to save trip");
+    }
+  }
+
+  async function toggleDefault() {
+    const newDefaultId = defaultTripId === trip.id ? "" : trip.id;
+    await updateSettings({ defaultTripId: newDefaultId });
+    setDefaultTripId(newDefaultId === "" ? null : newDefaultId);
+  }
 
   async function loadTrip() {
     try {
@@ -73,7 +141,7 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
   if (error) {
     return (
       <View style={styles.centered}>
-        <Text style={styles.errorIcon}>&#x26A0;</Text>
+        <Ionicons name="warning-outline" size={48} color={colors.textTertiary} style={{ marginBottom: spacing.lg }} />
         <Text style={styles.errorTitle}>Something went wrong</Text>
         <Text style={styles.errorMessage}>{error}</Text>
         <TouchableOpacity
@@ -187,7 +255,7 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
             }
           />
         )}
-        contentContainerStyle={styles.list}
+        contentContainerStyle={[styles.list, { paddingBottom: 80 + insets.bottom }]}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyText}>No receipts in this trip</Text>
@@ -203,12 +271,93 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
       />
 
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, { bottom: 24 + insets.bottom }]}
         onPress={() => navigation.navigate("CaptureModal", { tripId: id })}
         activeOpacity={0.8}
       >
-        <Text style={styles.fabIcon}>+</Text>
+        <Ionicons name="add" size={28} color={colors.onPrimary} style={{ fontWeight: "300" }} />
       </TouchableOpacity>
+
+      <Modal visible={editModalVisible} animationType="slide" transparent>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={{ flex: 1, justifyContent: "flex-end" }}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={[styles.modalContent, { paddingBottom: spacing.xxxl + insets.bottom }]}>
+              <View style={styles.modalHandle} />
+              <Text style={styles.modalTitle}>Edit Trip</Text>
+
+              <View style={styles.modalField}>
+                <Text style={styles.fieldLabel}>Trip Name</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={editName}
+                  onChangeText={setEditName}
+                  placeholder="e.g. JFK→LHR June"
+                  placeholderTextColor={colors.textTertiary}
+                />
+              </View>
+
+              <View style={styles.modalFieldRow}>
+                <View style={[styles.modalField, { flex: 1 }]}>
+                  <Text style={styles.fieldLabel}>Start Date</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={editStart}
+                    onChangeText={(v) => setEditStart(formatDateInput(v))}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor={colors.textTertiary}
+                    keyboardType="number-pad"
+                    maxLength={10}
+                    selectTextOnFocus
+                  />
+                </View>
+                <View style={[styles.modalField, { flex: 1 }]}>
+                  <Text style={styles.fieldLabel}>End Date</Text>
+                  <TextInput
+                    style={styles.modalInput}
+                    value={editEnd}
+                    onChangeText={(v) => setEditEnd(formatDateInput(v))}
+                    placeholder="YYYY-MM-DD"
+                    placeholderTextColor={colors.textTertiary}
+                    keyboardType="number-pad"
+                    maxLength={10}
+                    selectTextOnFocus
+                  />
+                </View>
+              </View>
+
+              <View style={styles.modalField}>
+                <Text style={styles.fieldLabel}>Notes (Optional)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={editNotes}
+                  onChangeText={setEditNotes}
+                  placeholder="Project code or client name..."
+                  placeholderTextColor={colors.textTertiary}
+                />
+              </View>
+
+              <TouchableOpacity
+                style={styles.createButton}
+                onPress={handleSaveEdit}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.createButtonText}>Save Changes</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.modalCancelButton}
+                onPress={() => setEditModalVisible(false)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.modalCancelText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -395,5 +544,80 @@ const styles = StyleSheet.create({
     fontSize: 28,
     color: colors.onPrimary,
     fontWeight: "300",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  modalContent: {
+    backgroundColor: colors.surface,
+    borderTopLeftRadius: radii.xl + 12,
+    borderTopRightRadius: radii.xl + 12,
+    padding: spacing.xl,
+    paddingBottom: spacing.xxxl,
+  },
+  modalHandle: {
+    width: 48,
+    height: 4,
+    backgroundColor: colors.border,
+    borderRadius: 2,
+    alignSelf: "center",
+    marginBottom: spacing.xl,
+  },
+  modalTitle: {
+    ...typography.displaySm,
+    color: colors.textPrimary,
+    marginBottom: spacing.xl,
+  },
+  modalField: {
+    marginBottom: spacing.lg,
+  },
+  modalFieldRow: {
+    flexDirection: "row",
+    gap: spacing.md,
+  },
+  fieldLabel: {
+    fontSize: 10,
+    fontWeight: "700",
+    color: colors.primary,
+    textTransform: "uppercase",
+    letterSpacing: 1.5,
+    marginBottom: spacing.xs,
+  },
+  modalInput: {
+    ...typography.headlineMd,
+    color: colors.textPrimary,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.border,
+    paddingBottom: spacing.sm,
+    paddingHorizontal: 2,
+  },
+  createButton: {
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.lg,
+    borderRadius: radii.lg,
+    alignItems: "center",
+    marginTop: spacing.lg,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  createButtonText: {
+    ...typography.labelMd,
+    color: colors.onPrimary,
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  modalCancelButton: {
+    paddingVertical: spacing.md,
+    alignItems: "center",
+    marginTop: spacing.sm,
+  },
+  modalCancelText: {
+    ...typography.bodyMd,
+    color: colors.textSecondary,
   },
 });

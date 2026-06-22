@@ -1,5 +1,5 @@
 import { createWriteStream, mkdirSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, isAbsolute } from "node:path";
 import { randomUUID } from "node:crypto";
 import archiver from "archiver";
 import PDFDocument from "pdfkit";
@@ -7,7 +7,15 @@ import { config } from "../config.js";
 import { readImageBuffer } from "./storage.js";
 import prisma from "../lib/prisma.js";
 
-const EXPORT_DIR = join(process.cwd(), config.dataDir, "exports");
+// config.dataDir may be absolute (e.g. /app/data in Docker) — join() does NOT
+// treat an absolute second arg as an override, so guard with isAbsolute the
+// same way storage.ts does. This must be the single source of truth for the
+// export directory; the download route imports EXPORT_DIR from here so writes
+// and reads can never drift to different paths.
+const DATA_DIR = isAbsolute(config.dataDir)
+  ? config.dataDir
+  : join(process.cwd(), config.dataDir);
+export const EXPORT_DIR = join(DATA_DIR, "exports");
 
 function ensureExportDir() {
   if (!existsSync(EXPORT_DIR)) {
@@ -25,6 +33,7 @@ interface ReceiptRow {
   currency: string;
   purchaseDate: string;
   capturedAt: Date;
+  status: string;
 }
 
 export async function generateZip(receipts: ReceiptRow[]): Promise<string> {
@@ -148,6 +157,7 @@ export async function generateCsv(receipts: ReceiptRow[]): Promise<string> {
       r.purchaseDate || r.capturedAt.toISOString().split("T")[0],
       r.currency,
       r.total.toFixed(2),
+      r.status,
     ].join(",")
   );
 

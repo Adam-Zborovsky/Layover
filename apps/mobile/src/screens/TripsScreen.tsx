@@ -10,10 +10,15 @@ import {
   Modal,
   RefreshControl,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import { fetchTrips, createTrip, deleteTrip } from "../api/client";
+import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { fetchTrips, createTrip, deleteTrip, fetchSettings } from "../api/client";
 import { colors, typography, spacing, radii } from "../ui/theme";
+import { formatDateInput } from "../utils/format";
 
 interface TripItem {
   id: string;
@@ -35,12 +40,18 @@ export function TripsScreen({ navigation }: { navigation: any }) {
   const [newStart, setNewStart] = useState("");
   const [newEnd, setNewEnd] = useState("");
   const [newNotes, setNewNotes] = useState("");
+  const [defaultTripId, setDefaultTripId] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
 
   const load = useCallback(async () => {
     try {
       setError(null);
-      const data = (await fetchTrips()) as TripItem[];
+      const [data, settings] = await Promise.all([
+        fetchTrips() as Promise<TripItem[]>,
+        fetchSettings() as Promise<Record<string, string>>,
+      ]);
       setTrips(Array.isArray(data) ? data : []);
+      setDefaultTripId(settings.defaultTripId || null);
     } catch (err: any) {
       setError(err.message || "Failed to load trips");
     } finally {
@@ -89,18 +100,55 @@ export function TripsScreen({ navigation }: { navigation: any }) {
     }
   }
 
-  async function handleDelete(id: string) {
-    Alert.alert("Delete Trip", "Receipts in this trip will be unassigned.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: async () => {
-          await deleteTrip(id);
-          load();
-        },
-      },
-    ]);
+  async function handleDelete(item: TripItem) {
+    const hasReceipts = item.receiptCount > 0;
+    Alert.alert("Delete Trip", hasReceipts
+      ? `"${item.name}" has ${item.receiptCount} receipt${item.receiptCount !== 1 ? "s" : ""}. Keep them or delete everything?`
+      : `Delete "${item.name}"?`,
+      hasReceipts
+        ? [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Delete Trip Only",
+              onPress: () => confirmDelete(item.id, false),
+            },
+            {
+              text: "Delete All",
+              style: "destructive",
+              onPress: () => {
+                Alert.alert(
+                  "Delete Everything?",
+                  `This will permanently delete ${item.receiptCount} receipt${item.receiptCount !== 1 ? "s" : ""} and "${item.name}". This cannot be undone.`,
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Delete All",
+                      style: "destructive",
+                      onPress: () => confirmDelete(item.id, true),
+                    },
+                  ]
+                );
+              },
+            },
+          ]
+        : [
+            { text: "Cancel", style: "cancel" },
+            {
+              text: "Delete",
+              style: "destructive",
+              onPress: () => confirmDelete(item.id, false),
+            },
+          ]
+    );
+  }
+
+  async function confirmDelete(id: string, deleteReceipts: boolean) {
+    try {
+      await deleteTrip(id, deleteReceipts);
+      load();
+    } catch (err: any) {
+      Alert.alert("Error", err.message || "Failed to delete trip");
+    }
   }
 
   return (
@@ -128,7 +176,7 @@ export function TripsScreen({ navigation }: { navigation: any }) {
           <TouchableOpacity
             style={styles.tripCard}
             onPress={() => navigation.navigate("TripDetail", { id: item.id })}
-            onLongPress={() => handleDelete(item.id)}
+            onLongPress={() => handleDelete(item)}
             activeOpacity={0.7}
           >
             <View style={styles.accentBar} />
@@ -139,6 +187,11 @@ export function TripsScreen({ navigation }: { navigation: any }) {
                   <Text style={styles.tripDates}>
                     {item.startDate} \u2014 {item.endDate}
                   </Text>
+                  {item.id === defaultTripId && (
+                    <View style={styles.defaultChip}>
+                      <Text style={styles.defaultChipText}>DEFAULT</Text>
+                    </View>
+                  )}
                 </View>
                 <View style={styles.tripAmountCol}>
                   <Text style={styles.tripAmount}>
@@ -161,7 +214,7 @@ export function TripsScreen({ navigation }: { navigation: any }) {
             </View>
           ) : error ? (
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>&#x26A0;</Text>
+              <Ionicons name="warning-outline" size={48} color={colors.textTertiary} style={{ marginBottom: spacing.lg }} />
               <Text style={styles.emptyTitle}>Something went wrong</Text>
               <Text style={styles.emptySubtitle}>{error}</Text>
               <TouchableOpacity
@@ -174,7 +227,7 @@ export function TripsScreen({ navigation }: { navigation: any }) {
             </View>
           ) : (
             <View style={styles.empty}>
-              <Text style={styles.emptyIcon}>&#x2708;</Text>
+              <Ionicons name="airplane-outline" size={48} color={colors.textTertiary} style={{ marginBottom: spacing.lg }} />
               <Text style={styles.emptyTitle}>No trips yet</Text>
               <Text style={styles.emptySubtitle}>
                 Start a new trip to begin tracking your expenses automatically with AI.
@@ -196,12 +249,15 @@ export function TripsScreen({ navigation }: { navigation: any }) {
         onPress={() => setModalVisible(true)}
         activeOpacity={0.8}
       >
-        <Text style={styles.fabIcon}>+</Text>
+        <Ionicons name="add" size={28} color={colors.onPrimary} style={{ marginTop: -2 }} />
       </TouchableOpacity>
 
       <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <KeyboardAvoidingView
+          style={styles.modalOverlay}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+        >
+          <View style={[styles.modalContent, { paddingBottom: spacing.xxxl + insets.bottom }]}>
             <View style={styles.modalHandle} />
             <Text style={styles.modalTitle}>Create New Trip</Text>
 
@@ -222,9 +278,11 @@ export function TripsScreen({ navigation }: { navigation: any }) {
                 <TextInput
                   style={styles.modalInput}
                   value={newStart}
-                  onChangeText={setNewStart}
+                  onChangeText={(v) => setNewStart(formatDateInput(v))}
                   placeholder="YYYY-MM-DD"
                   placeholderTextColor={colors.textTertiary}
+                  keyboardType="number-pad"
+                  maxLength={10}
                 />
               </View>
               <View style={[styles.modalField, { flex: 1 }]}>
@@ -232,9 +290,11 @@ export function TripsScreen({ navigation }: { navigation: any }) {
                 <TextInput
                   style={styles.modalInput}
                   value={newEnd}
-                  onChangeText={setNewEnd}
+                  onChangeText={(v) => setNewEnd(formatDateInput(v))}
                   placeholder="YYYY-MM-DD"
                   placeholderTextColor={colors.textTertiary}
+                  keyboardType="number-pad"
+                  maxLength={10}
                 />
               </View>
             </View>
@@ -266,7 +326,7 @@ export function TripsScreen({ navigation }: { navigation: any }) {
               <Text style={styles.modalCancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -348,6 +408,20 @@ const styles = StyleSheet.create({
   receiptBadgeText: {
     ...typography.labelSm,
     color: colors.primary,
+    textTransform: "uppercase",
+  },
+  defaultChip: {
+    backgroundColor: colors.primaryDim,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radii.full,
+    alignSelf: "flex-start",
+    marginTop: spacing.xs,
+  },
+  defaultChipText: {
+    ...typography.labelSm,
+    color: colors.primary,
+    fontWeight: "700",
     textTransform: "uppercase",
   },
   empty: {
