@@ -26,7 +26,7 @@ import {
 import { ConfidenceIndicator, StatusBadge, CategoryChip } from "../components/Badges";
 import { RECEIPT_CATEGORIES, type Receipt } from "@recipts/shared";
 import { colors, typography, spacing, radii, categoryColors } from "../ui/theme";
-import { formatDateInput } from "../utils/format";
+import { formatDateInput, formatCurrency } from "../utils/format";
 
 export function ReceiptDetailScreen({ route, navigation }: { route: any; navigation: any }) {
   const { id } = route.params;
@@ -323,8 +323,20 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
         <View style={styles.totalRow}>
           <Text style={styles.totalLabel}>Total Amount</Text>
           <View style={styles.totalValueRow}>
-            <Text style={styles.totalCurrency}>{display.currency || "USD"}</Text>
-            <Text style={styles.totalValue}>${(display.total || 0).toFixed(2)}</Text>
+            {editing ? (
+              <TextInput
+                style={[styles.currencyInput, { color: colors.primary }]}
+                value={display.currency || "USD"}
+                onChangeText={(v) => updateField("currency", v.toUpperCase().slice(0, 3))}
+                maxLength={3}
+                autoCapitalize="characters"
+                placeholder="USD"
+                placeholderTextColor={colors.textTertiary}
+              />
+            ) : (
+              <Text style={styles.totalCurrency}>{display.currency || "USD"}</Text>
+            )}
+            <Text style={styles.totalValue}>{formatCurrency(display.total || 0, display.currency)}</Text>
           </View>
         </View>
       </View>
@@ -421,7 +433,7 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
               <View key={idx} style={styles.lineItemRow}>
                 <Text style={styles.lineItemDesc}>{item.description}</Text>
                 <Text style={styles.lineItemAmount}>
-                  ${(item.amount || 0).toFixed(2)}
+                  {formatCurrency(item.amount || 0, receipt.currency)}
                 </Text>
               </View>
             ))}
@@ -661,6 +673,16 @@ const styles = StyleSheet.create({
     ...typography.labelSm,
     color: colors.primary,
     fontWeight: "700",
+  },
+  currencyInput: {
+    ...typography.labelSm,
+    color: colors.primary,
+    fontWeight: "700",
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingBottom: 0,
+    minWidth: 36,
+    textAlign: "center",
   },
   totalValue: {
     ...typography.amountLg,

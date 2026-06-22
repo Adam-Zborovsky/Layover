@@ -10,7 +10,7 @@ export async function tripRoutes(app: FastifyInstance) {
       include: {
         _count: { select: { receipts: true } },
         receipts: {
-          select: { total: true },
+          select: { total: true, currency: true },
         },
       },
     });
@@ -24,6 +24,7 @@ export async function tripRoutes(app: FastifyInstance) {
       createdAt: t.createdAt,
       receiptCount: t._count.receipts,
       totalAmount: t.receipts.reduce((sum, r) => sum + r.total, 0),
+      currency: t.receipts[0]?.currency || "USD",
     }));
   });
 

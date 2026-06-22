@@ -18,7 +18,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fetchTrips, createTrip, deleteTrip, fetchSettings } from "../api/client";
 import { colors, typography, spacing, radii } from "../ui/theme";
-import { formatDateInput } from "../utils/format";
+import { formatDateInput, formatCurrency } from "../utils/format";
 
 interface TripItem {
   id: string;
@@ -195,7 +195,7 @@ export function TripsScreen({ navigation }: { navigation: any }) {
                 </View>
                 <View style={styles.tripAmountCol}>
                   <Text style={styles.tripAmount}>
-                    ${(item.totalAmount || 0).toFixed(2)}
+                    {formatCurrency(item.totalAmount || 0, item.currency)}
                   </Text>
                   <View style={styles.receiptBadge}>
                     <Text style={styles.receiptBadgeText}>
