@@ -2,6 +2,7 @@ import type { ReceiptCategory } from "@recipts/shared";
 
 interface NamingContext {
   capturedAt: Date;
+  purchaseDate?: string;
   merchant: string;
   category: ReceiptCategory | string;
   total: number;
@@ -9,6 +10,7 @@ interface NamingContext {
 }
 
 const SAFE_CHAR_RE = /[^a-zA-Z0-9\-_]/g;
+const VALID_DATE_RE = /^\d{4}-\d{2}-\d{2}/;
 
 function pad(n: number): string {
   return n.toString().padStart(2, "0");
@@ -17,8 +19,15 @@ function pad(n: number): string {
 export function deriveFileName(ctx: NamingContext, template?: string): string {
   const tpl = template || "YYYY-MM-DD_Merchant_Category_$Total";
 
-  const d = new Date(ctx.capturedAt);
-  const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  // The receipt date (as extracted by AI) is what the filename should reflect —
+  // not the upload timestamp, since receipts are often uploaded a day or more late.
+  let dateStr: string;
+  if (ctx.purchaseDate && VALID_DATE_RE.test(ctx.purchaseDate)) {
+    dateStr = ctx.purchaseDate.slice(0, 10);
+  } else {
+    const d = new Date(ctx.capturedAt);
+    dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
 
   const safeMerchant = ctx.merchant.replace(SAFE_CHAR_RE, "_").replace(/_+/g, "_").replace(/^_|_$/g, "") || "Unknown";
   const safeCategory = String(ctx.category).replace(SAFE_CHAR_RE, "_").replace(/_+/g, "_").replace(/^_|_$/g, "") || "Other";

@@ -42,6 +42,7 @@ async function processReceipt(receiptId: string, imageBase64: string, mimeType: 
 
     const fileName = deriveFileName({
       capturedAt: receipt.capturedAt,
+      purchaseDate: finalResult.purchaseDate,
       merchant: finalResult.merchant,
       category: finalResult.suggestedCategory,
       total: finalResult.total,
@@ -196,6 +197,7 @@ export async function receiptRoutes(app: FastifyInstance) {
         userEdited: true,
         fileName: deriveFileName({
           capturedAt: existing.capturedAt,
+          purchaseDate: body.purchaseDate || existing.purchaseDate,
           merchant: body.merchant || existing.merchant,
           category: (body.category || existing.category) as ReceiptCategory,
           total: body.total ?? existing.total,
