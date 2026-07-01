@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -21,6 +21,7 @@ import { showErrorAlert } from "../utils/errors";
 import * as Sharing from "expo-sharing";
 import { Paths, File } from "expo-file-system";
 import { colors, typography, spacing, radii } from "../ui/theme";
+import { useExportSelection } from "../hooks/useExportSelection";
 import type {
   ReceiptListItem,
   PaginatedResponse,
@@ -36,14 +37,21 @@ interface TripItem {
 
 export function ExportScreen() {
   const [receipts, setReceipts] = useState<ReceiptListItem[]>([]);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [exporting, setExporting] = useState(false);
   const [selectedFormats, setSelectedFormats] = useState<Set<ExportFormat>>(
     new Set(["zip"])
   );
   const [trips, setTrips] = useState<TripItem[]>([]);
-  const [activeTripId, setActiveTripId] = useState<string | null>(null);
   const [exportLog, setExportLog] = useState<ExportResult[]>([]);
+  const {
+    selected,
+    activeTripId,
+    filteredReceipts,
+    toggleSelect,
+    selectAll,
+    selectTrip,
+    clearTripFilter,
+  } = useExportSelection(receipts);
 
   useEffect(() => {
     loadReceipts();
@@ -74,28 +82,6 @@ export function ExportScreen() {
       const data = (await fetchExportLog()) as ExportResult[];
       setExportLog(Array.isArray(data) ? data : []);
     } catch {}
-  }
-
-  const filteredReceipts = useMemo(() => {
-    if (!activeTripId) return receipts;
-    return (receipts || []).filter((r) => r.tripId === activeTripId);
-  }, [receipts, activeTripId]);
-
-  function toggleSelect(id: string) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  function selectAll() {
-    if (selected.size === filteredReceipts.length) {
-      setSelected(new Set());
-    } else {
-      setSelected(new Set(filteredReceipts.map((r) => r.id)));
-    }
   }
 
   function toggleFormat(fmt: ExportFormat) {
@@ -207,7 +193,7 @@ export function ExportScreen() {
                     styles.tripChip,
                     !activeTripId && styles.tripChipActive,
                   ]}
-                  onPress={() => setActiveTripId(null)}
+                  onPress={clearTripFilter}
                   activeOpacity={0.7}
                 >
                   <Text
@@ -228,7 +214,7 @@ export function ExportScreen() {
                         styles.tripChip,
                         isActive && styles.tripChipActive,
                       ]}
-                      onPress={() => setActiveTripId(t.id)}
+                      onPress={() => selectTrip(t.id)}
                       activeOpacity={0.7}
                     >
                       <Text
