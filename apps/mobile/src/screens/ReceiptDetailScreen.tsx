@@ -25,6 +25,7 @@ import {
 } from "../api/client";
 import { ConfidenceIndicator, StatusBadge, CategoryChip } from "../components/Badges";
 import { RECEIPT_CATEGORIES, type Receipt } from "@recipts/shared";
+import { showErrorAlert } from "../utils/errors";
 import { colors, typography, spacing, radii, categoryColors } from "../ui/theme";
 import { formatDateInput, formatCurrency } from "../utils/format";
 
@@ -92,7 +93,7 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
       setEditing(false);
       loadReceipt();
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to save");
+      showErrorAlert("Error", err, "Failed to save");
     } finally {
       setIsSaving(false);
     }
@@ -223,6 +224,25 @@ export function ReceiptDetailScreen({ route, navigation }: { route: any; navigat
       <View style={styles.statusRow}>
         <StatusBadge status={receipt.status} />
       </View>
+
+      {receipt.status === "FAILED" && (
+        <View style={styles.failureBanner}>
+          <View style={styles.failureBannerHeader}>
+            <Ionicons name="alert-circle" size={18} color={colors.error} />
+            <Text style={styles.failureBannerTitle}>Processing failed</Text>
+          </View>
+          <Text style={styles.failureBannerMessage}>
+            {receipt.processingError || "Unknown error — check server logs."}
+          </Text>
+          <TouchableOpacity
+            style={styles.failureBannerRetry}
+            onPress={handleReprocess}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.failureBannerRetryText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <View style={styles.card}>
         <View style={[styles.field, styles.confidenceBorder]}>
@@ -600,6 +620,41 @@ const styles = StyleSheet.create({
   statusRow: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
+  },
+  failureBanner: {
+    backgroundColor: colors.errorDim,
+    borderRadius: radii.lg,
+    padding: spacing.lg,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
+  },
+  failureBannerHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  failureBannerTitle: {
+    ...typography.headlineMd,
+    color: colors.error,
+  },
+  failureBannerMessage: {
+    ...typography.bodySm,
+    color: colors.textPrimary,
+    fontFamily: "monospace",
+  },
+  failureBannerRetry: {
+    alignSelf: "flex-start",
+    backgroundColor: colors.error,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.md,
+    marginTop: spacing.xs,
+  },
+  failureBannerRetryText: {
+    ...typography.labelMd,
+    color: colors.onPrimary,
+    fontWeight: "700",
   },
   card: {
     backgroundColor: colors.surface,

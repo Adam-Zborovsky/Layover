@@ -7,6 +7,7 @@ import { getNetworkStateAsync } from "expo-network";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { uploadReceipt, fetchSettings, fetchTrip, ApiError } from "../api/client";
 import { addToQueue, getQueueCount } from "../services/offlineQueue";
+import { showErrorAlert } from "../utils/errors";
 import { colors, typography, spacing, radii } from "../ui/theme";
 
 type FlashMode = "off" | "on";
@@ -114,7 +115,7 @@ export function CaptureScreen({ navigation, route }: { navigation: any; route: a
         return;
       }
       if (err instanceof ApiError && !err.isNetworkError) {
-        Alert.alert("Upload Failed", err.message || "Server rejected the upload. Please try again.");
+        showErrorAlert("Upload Failed", err, "Server rejected the upload. Please try again.");
         setUploading(false);
         return;
       }

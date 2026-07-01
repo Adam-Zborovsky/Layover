@@ -17,6 +17,7 @@ import {
   fetchExportLog,
 } from "../api/client";
 import { getAuthToken } from "../api/auth";
+import { showErrorAlert } from "../utils/errors";
 import * as Sharing from "expo-sharing";
 import { Paths, File } from "expo-file-system";
 import { colors, typography, spacing, radii } from "../ui/theme";
@@ -146,7 +147,7 @@ export function ExportScreen() {
         loadExportLog();
       }
     } catch (err: any) {
-      Alert.alert("Export failed", err.message || "Unknown error");
+      showErrorAlert("Export failed", err, "Unknown error");
     } finally {
       setExporting(false);
     }

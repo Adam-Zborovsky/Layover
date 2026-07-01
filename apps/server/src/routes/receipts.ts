@@ -3,6 +3,7 @@ import prisma from "../lib/prisma.js";
 import { saveImage, deleteImage, imageToBase64, readImageBuffer } from "../services/storage.js";
 import { extractReceipt } from "../services/gemini.js";
 import { deriveFileName, resolveCollision } from "../services/filename.js";
+import { formatErrorForStorage } from "../lib/errors.js";
 import { receiptCreateSchema, receiptUpdateSchema, receiptListQuerySchema } from "@recipts/shared";
 import type { ReceiptCategory } from "@recipts/shared";
 
@@ -24,8 +25,12 @@ async function processReceipt(receiptId: string, imageBase64: string, mimeType: 
           const proResult = await extractReceipt(imageBase64, mimeType, "gemini-2.5-pro");
           finalResult = proResult;
           usedModel = "gemini-2.5-pro";
-        } catch {
-          // keep flash result if pro fails
+        } catch (proErr) {
+          // keep flash result if pro fails, but surface why
+          console.error(
+            `[processReceipt ${receiptId}] pro escalation failed, keeping flash result:`,
+            formatErrorForStorage(proErr)
+          );
         }
       }
     }
@@ -66,6 +71,7 @@ async function processReceipt(receiptId: string, imageBase64: string, mimeType: 
         aiConfidence: finalResult.confidence,
         aiModel: usedModel,
         status,
+        processingError: "",
         fileName: resolvedName,
       },
     });
@@ -81,9 +87,13 @@ async function processReceipt(receiptId: string, imageBase64: string, mimeType: 
       });
     }
   } catch (err) {
+    // Surface the real cause — Gemini errors (429/503) were previously swallowed.
+    const processingError = formatErrorForStorage(err);
+    console.error(`[processReceipt ${receiptId}] extraction failed:`, processingError);
+    if (err instanceof Error && err.stack) console.error(err.stack);
     await prisma.receipt.update({
       where: { id: receiptId },
-      data: { status: "FAILED" },
+      data: { status: "FAILED", processingError },
     });
   }
 }
@@ -209,7 +219,7 @@ export async function receiptRoutes(app: FastifyInstance) {
 
     await prisma.receipt.update({
       where: { id },
-      data: { status: "PROCESSING" },
+      data: { status: "PROCESSING", processingError: "" },
     });
 
     const imageBuf = await readImageBuffer(receipt.imagePath);

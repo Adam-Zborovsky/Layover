@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fetchSettings, updateSettings, checkHealth, fetchReceipts, fetchTrips } from "../api/client";
 import { setBaseUrl, setAuthToken, getBaseUrl, getAuthToken } from "../api/auth";
+import { showErrorAlert } from "../utils/errors";
 import { colors, typography, spacing, radii } from "../ui/theme";
 
 export function SettingsScreen() {
@@ -65,7 +66,7 @@ export function SettingsScreen() {
       await setAuthToken(authTokenLocal);
       Alert.alert("Saved", "Settings updated successfully");
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to save settings");
+      showErrorAlert("Error", err, "Failed to save settings");
     }
   }
 

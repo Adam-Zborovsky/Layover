@@ -29,6 +29,7 @@ model Receipt {
   aiConfidence    Float    @default(0)
   aiModel         String   @default("")
   status          String   @default("PROCESSING")
+  processingError String   @default("")
   userEdited      Boolean  @default(false)
   fileName        String   @default("")
 

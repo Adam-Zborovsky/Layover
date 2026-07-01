@@ -43,6 +43,7 @@ export interface Receipt {
   aiConfidence: number;
   aiModel: string;
   status: ReceiptStatus;
+  processingError: string;
   userEdited: boolean;
   fileName: string;
   lineItems?: LineItem[];

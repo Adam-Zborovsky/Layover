@@ -1,33 +1,66 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { config } from "../config.js";
-import { geminiExtractionSchema, type GeminiExtractionResult } from "@recipts/shared";
+import {
+  geminiExtractionSchema,
+  RECEIPT_CATEGORIES,
+  type GeminiExtractionResult,
+} from "@recipts/shared";
 
 const ai = new GoogleGenAI({ apiKey: config.geminiApiKey });
 
-const EXTRACTION_PROMPT = `You are a receipt OCR engine. Extract the following fields from this receipt image.
-Return ONLY a JSON object matching this exact schema — no other text:
-
-{
-  "merchant": "string (business name)",
-  "locationCity": "string (city name)",
-  "locationAddress": "string (full street address or empty string)",
-  "purchaseDate": "string (YYYY-MM-DD format)",
-  "currency": "string (3-letter ISO code, default USD)",
-  "subtotal": number,
-  "tax": number,
-  "tip": number,
-  "total": number (the final amount paid — must always be extracted),
-  "paymentMethod": "string (Visa, Mastercard, Cash, etc. or empty string)",
-  "suggestedCategory": "Food" | "CarService" | "Lodging" | "Airfare" | "Parking" | "Tolls" | "Supplies" | "Other",
-  "lineItems": [{ "description": "string", "amount": number }],
-  "confidence": number (0 to 1 — how confident you are in the overall extraction accuracy)
-}
+const EXTRACTION_PROMPT = `You are a receipt OCR engine. Extract the receipt fields defined by the response schema.
 
 Rules:
 - If a field is not visible, use "" for strings, 0 for numbers.
 - total is the final amount paid. If a tip line exists, it is separate from subtotal/tax.
 - If the receipt is handwritten, crumpled, or faded, lower your confidence score.
-- For the suggestedCategory, pick the best match based on merchant type and items.`;
+- For suggestedCategory, pick the best match based on merchant type and items.`;
+
+// Constrains Gemini to structurally valid JSON via constrained decoding — no more
+// markdown fences or trailing commas to strip from free-form text output.
+const RESPONSE_SCHEMA = {
+  type: Type.OBJECT,
+  properties: {
+    merchant: { type: Type.STRING },
+    locationCity: { type: Type.STRING },
+    locationAddress: { type: Type.STRING },
+    purchaseDate: { type: Type.STRING, description: "YYYY-MM-DD" },
+    currency: { type: Type.STRING, description: "3-letter ISO code" },
+    subtotal: { type: Type.NUMBER },
+    tax: { type: Type.NUMBER },
+    tip: { type: Type.NUMBER },
+    total: { type: Type.NUMBER },
+    paymentMethod: { type: Type.STRING },
+    suggestedCategory: { type: Type.STRING, enum: [...RECEIPT_CATEGORIES] },
+    lineItems: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          description: { type: Type.STRING },
+          amount: { type: Type.NUMBER },
+        },
+        required: ["description", "amount"],
+      },
+    },
+    confidence: { type: Type.NUMBER, description: "0 to 1" },
+  },
+  required: [
+    "merchant",
+    "locationCity",
+    "locationAddress",
+    "purchaseDate",
+    "currency",
+    "subtotal",
+    "tax",
+    "tip",
+    "total",
+    "paymentMethod",
+    "suggestedCategory",
+    "lineItems",
+    "confidence",
+  ],
+};
 
 export async function extractReceipt(
   imageBase64: string,
@@ -49,6 +82,10 @@ export async function extractReceipt(
         ],
       },
     ],
+    config: {
+      responseMimeType: "application/json",
+      responseSchema: RESPONSE_SCHEMA,
+    },
   });
 
   const text = response.text;
@@ -56,17 +93,14 @@ export async function extractReceipt(
     throw new Error("Gemini returned empty response");
   }
 
-  let jsonStr = text.trim();
-  if (jsonStr.startsWith("```json")) {
-    jsonStr = jsonStr.slice(7);
-  } else if (jsonStr.startsWith("```")) {
-    jsonStr = jsonStr.slice(3);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch (err) {
+    throw new Error(
+      `Gemini returned unparseable JSON: ${(err as Error).message}. Raw response: ${text.slice(0, 300)}`
+    );
   }
-  if (jsonStr.endsWith("```")) {
-    jsonStr = jsonStr.slice(0, -3);
-  }
-  jsonStr = jsonStr.trim();
 
-  const parsed = JSON.parse(jsonStr);
   return geminiExtractionSchema.parse(parsed);
 }

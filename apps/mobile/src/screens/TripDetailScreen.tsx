@@ -15,6 +15,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fetchTrip, updateTrip, fetchSettings, updateSettings } from "../api/client";
+import { showErrorAlert } from "../utils/errors";
 import { ReceiptCard } from "../components/ReceiptCard";
 import { CategoryChip } from "../components/Badges";
 import { colors, typography, spacing, radii } from "../ui/theme";
@@ -98,7 +99,7 @@ export function TripDetailScreen({ route, navigation }: { route: any; navigation
       setEditModalVisible(false);
       loadTrip();
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to save trip");
+      showErrorAlert("Error", err, "Failed to save trip");
     }
   }
 

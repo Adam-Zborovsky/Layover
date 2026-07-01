@@ -17,6 +17,7 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fetchTrips, createTrip, deleteTrip, fetchSettings } from "../api/client";
+import { showErrorAlert } from "../utils/errors";
 import { colors, typography, spacing, radii } from "../ui/theme";
 import { formatDateInput, formatCurrency } from "../utils/format";
 
@@ -96,7 +97,7 @@ export function TripsScreen({ navigation }: { navigation: any }) {
       setNewNotes("");
       load();
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to create trip");
+      showErrorAlert("Error", err, "Failed to create trip");
     }
   }
 
@@ -147,7 +148,7 @@ export function TripsScreen({ navigation }: { navigation: any }) {
       await deleteTrip(id, deleteReceipts);
       load();
     } catch (err: any) {
-      Alert.alert("Error", err.message || "Failed to delete trip");
+      showErrorAlert("Error", err, "Failed to delete trip");
     }
   }
 
