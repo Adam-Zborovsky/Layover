@@ -24,12 +24,14 @@ services:
       - recipts-server
     networks:
       - recipts-net
-      - adam-cloud
+      # Attach to your reverse-proxy / tunnel network here (e.g. an external
+      # Docker network shared with Nginx Proxy Manager, Traefik, or a tunnel).
+      - edge-network
 
 networks:
   recipts-net:
     driver: bridge
-  adam-cloud:
+  edge-network:
     external: true
 
 volumes:

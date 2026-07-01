@@ -10,3 +10,9 @@ android/
 ios/
 *.apk
 *.aab
+
+# Build artifacts / logs (may contain account IDs, signed URLs)
+*.log
+eas_build*.gz
+bv.json
+logurl.txt

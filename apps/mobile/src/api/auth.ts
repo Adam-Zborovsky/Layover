@@ -3,7 +3,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const BASE_URL_KEY = "api_base_url";
 const AUTH_TOKEN_KEY = "auth_token";
 
-const DEFAULT_BASE_URL = "https://layover.adamzborovsky.com/api";
+// No default server: the user configures their self-hosted API URL in Settings → Server Connection.
+const DEFAULT_BASE_URL = "";
 
 let cachedBaseUrl: string | null = null;
 let cachedToken: string | null = null;
