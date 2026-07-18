@@ -92,7 +92,7 @@ export const geminiExtractionSchema = z.object({
   lineItems: z.array(
     z.object({
       description: z.string(),
-      amount: z.number().min(0),
+      amount: z.number(),
     })
   ),
   confidence: z.number().min(0).max(1),
