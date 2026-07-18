@@ -2,7 +2,7 @@ import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View,
   Text,
-  FlatList,
+  SectionList,
   StyleSheet,
   RefreshControl,
   TouchableOpacity,
@@ -12,14 +12,26 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import { Ionicons } from "@expo/vector-icons";
 import { ReceiptCard } from "../components/ReceiptCard";
-import { fetchReceipts } from "../api/client";
+import { TripSectionHeader } from "../components/TripSectionHeader";
+import { fetchReceipts, fetchTrips } from "../api/client";
 import { getAuthToken } from "../api/auth";
 import { processQueue } from "../services/queueProcessor";
+import { useCollapsedTrips } from "../hooks/useCollapsedTrips";
 import { colors, typography, spacing, radii } from "../ui/theme";
 import type { PaginatedResponse, ReceiptListItem } from "@recipts/shared";
 
+interface TripSummary {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+}
+
+const UNTAGGED_SECTION_ID = "__untagged__";
+
 export function HomeScreen({ navigation }: { navigation: any }) {
   const [receipts, setReceipts] = useState<ReceiptListItem[]>([]);
+  const [trips, setTrips] = useState<TripSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -48,8 +60,12 @@ export function HomeScreen({ navigation }: { navigation: any }) {
       if (activeFilter === "needs_review") params.needsReview = true;
       else if (activeFilter) params.status = activeFilter;
 
-      const data = (await fetchReceipts(params)) as PaginatedResponse<ReceiptListItem>;
+      const [data, tripsData] = await Promise.all([
+        fetchReceipts(params) as Promise<PaginatedResponse<ReceiptListItem>>,
+        fetchTrips() as Promise<TripSummary[]>,
+      ]);
       setReceipts(data.items);
+      setTrips(Array.isArray(tripsData) ? tripsData : []);
     } catch (err: any) {
       setError(err.message || "Failed to load receipts");
     } finally {
@@ -103,6 +119,50 @@ export function HomeScreen({ navigation }: { navigation: any }) {
 
   const totalAmount = (receipts || []).reduce((sum, r) => sum + Number(r.total || 0), 0);
   const totalCurrency = receipts?.[0]?.currency || "USD";
+
+  const { collapsedIds, toggle } = useCollapsedTrips();
+
+  const tripsById = new Map(trips.map((t) => [t.id, t]));
+
+  const receiptsByTrip = new Map<string, ReceiptListItem[]>();
+  for (const r of receipts || []) {
+    const key = r.tripId || UNTAGGED_SECTION_ID;
+    const list = receiptsByTrip.get(key) || [];
+    list.push(r);
+    receiptsByTrip.set(key, list);
+  }
+
+  const sortedTripIds = Array.from(receiptsByTrip.keys())
+    .filter((id) => id !== UNTAGGED_SECTION_ID)
+    .sort((a, b) => {
+      const dateA = tripsById.get(a)?.startDate || "";
+      const dateB = tripsById.get(b)?.startDate || "";
+      return dateB.localeCompare(dateA);
+    });
+
+  const orderedSectionIds = receiptsByTrip.has(UNTAGGED_SECTION_ID)
+    ? [UNTAGGED_SECTION_ID, ...sortedTripIds]
+    : sortedTripIds;
+
+  const sections = orderedSectionIds.map((sectionId) => {
+    const sectionReceipts = receiptsByTrip.get(sectionId) || [];
+    const isUntagged = sectionId === UNTAGGED_SECTION_ID;
+    const trip = isUntagged ? null : tripsById.get(sectionId) || null;
+    const isCollapsed = collapsedIds.has(sectionId);
+    const sectionTotal = sectionReceipts.reduce((sum, r) => sum + Number(r.total || 0), 0);
+    const sectionCurrency = sectionReceipts[0]?.currency || "USD";
+
+    return {
+      id: sectionId,
+      title: isUntagged ? "No trip" : trip?.name || "Unknown trip",
+      dateRange: isUntagged || !trip ? null : `${trip.startDate} — ${trip.endDate}`,
+      receiptCount: sectionReceipts.length,
+      totalAmount: sectionTotal,
+      currency: sectionCurrency,
+      collapsed: isCollapsed,
+      data: isCollapsed ? [] : sectionReceipts,
+    };
+  });
 
   return (
     <View style={styles.container}>
@@ -167,9 +227,20 @@ export function HomeScreen({ navigation }: { navigation: any }) {
         </View>
       </View>
 
-      <FlatList
-        data={receipts || []}
+      <SectionList
+        sections={sections}
         keyExtractor={(item) => item.id}
+        renderSectionHeader={({ section }) => (
+          <TripSectionHeader
+            title={section.title}
+            dateRange={section.dateRange}
+            receiptCount={section.receiptCount}
+            totalAmount={section.totalAmount}
+            currency={section.currency}
+            collapsed={section.collapsed}
+            onToggle={() => toggle(section.id)}
+          />
+        )}
         renderItem={({ item }) => (
           <ReceiptCard
             id={item.id}
@@ -191,6 +262,7 @@ export function HomeScreen({ navigation }: { navigation: any }) {
             colors={[colors.primary]}
           />
         }
+        stickySectionHeadersEnabled={false}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           isLoading ? (
